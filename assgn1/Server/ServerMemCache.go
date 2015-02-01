@@ -1,11 +1,10 @@
 package Server
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,7 +27,7 @@ type Data struct {
 	setTime     int64
 	expiry      int64
 	recordMutex *sync.Mutex
-	//timer			tm
+	timerRecord *time.Timer
 }
 
 func Server() {
@@ -53,8 +52,10 @@ func handleClient(conn net.Conn, db map[string]*Data) {
 		if err != nil {
 			return
 		}
+		//Server response
 		sr := ""
-		/*Convert command read from conn to array of strings then read them separately	*/
+
+		//Variable line contains one or two lines of cmds, cmd contains individual fields of command
 		str := string(buf[0:n])
 		line := strings.Split(str, "\r\n")
 		cmd := strings.Fields(line[0])
@@ -114,26 +115,42 @@ func handleClient(conn net.Conn, db map[string]*Data) {
 }
 
 func setFields(db map[string]*Data, expStr string, numBStr string, value string, key string, l int, op string) (sr string) {
+	//Timer handling
+	var oldTimer *time.Timer
+	globMutex.RLock()
+	d, exist := db[key]
+	if exist && d.timerRecord != nil {
+		oldTimer = d.timerRecord
+	}
+	globMutex.RUnlock()
+	timer := oldTimer
+
+	//Conversion from string to apt data type
 	exp, err := strconv.ParseInt(expStr, 0, 64)
 	checkErr(err)
 	numb, err1 := strconv.ParseInt(numBStr, 0, 64)
 	checkErr(err1)
+
 	//For incremental version numbers--TO BE ADDED
 	ver := int64(rand.Intn(10000))
 	if numb != int64(len(value)) {
 		numb = int64(len(value))
 	}
 	setTime := time.Now().Unix()
-	globMutex.Lock()
-	db[key] = &Data{value, ver, numb, setTime, exp, &sync.Mutex{}}
-	globMutex.Unlock()
+
 	if exp > 0 {
+		if oldTimer != nil {
+			oldTimer.Stop()
+		}
 		expInSec := secs * time.Duration(exp)
-		time.AfterFunc(expInSec, func() {
+		timer = time.AfterFunc(expInSec, func() {
 			checkAndExpire(db, key, exp, setTime)
 		})
 
 	}
+	globMutex.Lock()
+	db[key] = &Data{value, ver, numb, setTime, exp, &sync.Mutex{}, timer}
+	globMutex.Unlock()
 	if op == "set" {
 		if l == 4 {
 			sr = "OK " + strconv.FormatInt(ver, 10) + "\r\n"
@@ -164,10 +181,10 @@ func getFields(db map[string]*Data, key string, l int, op string) (sr string) {
 			remExp := d.expiry - (time.Now().Unix() - d.setTime)
 			d.recordMutex.Unlock()
 
-			//Converting the data fields to string
 			verStr := strconv.FormatInt(ver, 10)
 			numStr := strconv.FormatInt(numBytes, 10)
 			remExpStr := strconv.FormatInt(remExp, 10)
+
 			if op == "getm" {
 				sr = "VALUE " + verStr + " " + remExpStr + " " + numStr + "\r\n" + valueBytes + "\r\n"
 			} else {
@@ -188,7 +205,6 @@ func deleteRecord(db map[string]*Data, key string) (sr string) {
 	_, exist := db[key]
 	globMutex.RUnlock()
 	if exist != false {
-		//if db[key] != nil {
 		globMutex.Lock()
 		delete(db, key)
 		globMutex.Unlock()
@@ -197,14 +213,6 @@ func deleteRecord(db map[string]*Data, key string) (sr string) {
 		sr = "ERRNOTFOUND\r\n"
 	}
 	return
-}
-
-func checkErr(err error) {
-	if err != nil {
-		//TO BE CHANGED!
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
-	}
 }
 
 func checkAndExpire(db map[string]*Data, key string, oldExp int64, setTime int64) {
@@ -275,4 +283,10 @@ func SeparateCmds(str string) (cmd []string) {
 		}
 	}
 	return
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Println("Error encountered:", err)
+	}
 }
