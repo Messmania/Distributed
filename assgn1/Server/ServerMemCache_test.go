@@ -10,17 +10,18 @@ func TestServer(t *testing.T) {
 	go Server()
 }
 
+
 //PASSED
 //Checking server's affirmative responses
 func TestResponse(t *testing.T) {
 	t.Parallel()
 	verStr := "7887"
 	const n int = 6
-	set1 := "set abc 20 5\r\nabcdefjg\r\n"
+	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	set2 := "set bcd 30 5\r\nefghi\r\n"
 	getm1 := "getm abc\r\n"
 	getm2 := "getm bcd\r\n"
-	cas1 := "cas bcd 30 " + verStr + " 20\r\nnewValue\r\n"
+	cas1 := "cas bcd 30 " + verStr + " 8\r\nnewValue\r\n"
 	del1 := "delete bcd\r\n"
 
 	//Expected values
@@ -81,7 +82,7 @@ func TestCheckAndExpire(t *testing.T) {
 	}
 
 	//Commands
-	set1 := "set abc 3 10\r\nabcdefjg\r\n"
+	set1 := "set abc 3 8\r\nabcdefjg\r\n"
 	set2 := "set abc 6 7\r\nmonikas\r\n"
 	getm1 := "getm abc\r\n"
 
@@ -122,6 +123,7 @@ func TestCheckAndExpire(t *testing.T) {
 
 }
 
+
 //PASSED
 func TestErrors(t *testing.T) {
 	t.Parallel()
@@ -134,12 +136,12 @@ func TestErrors(t *testing.T) {
 
 	//============For ERR_CMD_ERR===========
 	set1 := "SET ms 5 11 extra\r\nmonikasahai\r\n"
-	cas2 := "cas a\r\n"
+	cas2 := "cas a\r\nnewVal"
 	get2 := "get ms ok\r\n"
 
 	//===========For ERR_VERSION============
 	set2 := "set ms 2 11\r\nmonikasahai\r\n"
-	cas3 := "cas ms 2 1092 10\r\nnewMonika\r\n"
+	cas3 := "cas ms 2 1092 9\r\nnewMonika\r\n"
 
 	//==========For ERR_INTERNAL============
 	msg1 := "del ms"
@@ -178,12 +180,11 @@ func TestErrors(t *testing.T) {
 
 //PASSED
 //Checking multiple commands send by single user
-
 func TestMultipleCmds(t *testing.T) {
 	t.Parallel()
 	chann := make(chan string)
 	const n int = 4
-	cmd1 := "set abc 10 10\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
+	cmd1 := "set abc 10 5\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
 	E := []string{"OK", "VALUE 10 5\r\ndata1\r\n", "DELETED", "ERRNOTFOUND"}
 
 	go Client(chann, cmd1, "cmd1")
@@ -212,7 +213,7 @@ func TestMRMC(t *testing.T) {
 	t.Parallel()
 	const n int = 4
 	const nC int = 2
-	cmd1 := "set abc 10 10\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
+	cmd1 := "set abc 10 5\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
 	cmd2 := "set bcd 2 2\r\nmn\r\ngetm bcd\r\ndelete bcd\r\ngetm bcd\r\n"
 	E1 := []string{"OK", "VALUE 10 5\r\ndata1\r\n", "DELETED", "ERRNOTFOUND"}
 	E2 := []string{"OK", "VALUE 2 2\r\nmn\r\n", "DELETED", "ERRNOTFOUND"}
@@ -249,28 +250,22 @@ func TestMRMC(t *testing.T) {
 
 }
 
-/*
 //PASSED
-//Test NO reply option--NOT COMMITED IN REPO
+//Test NO reply option
 func TestNoReply(t *testing.T) {
 	t.Parallel()
 	const n int = 3
-	cmd := "set mnp 10 10 noreply\r\nabcdefjg\r\nset bcd 15 5\r\nmonik\r\nget mnp\r\n"
-	//cmd := "set mnp 10 10 noreply\r\nabcdefjg\r\nget mnp\r\n"
+	cmd := "set mnp 10 8 noreply\r\nabcdefjg\r\nset bcd 15 5\r\nmonik\r\nget mnp\r\n"
 	chann := make(chan string)
 
 	//Expected outputs
-	//E := []string{"nr", "OK", "VALUE 8\r\nabcdefjg\r\n"}
 	E := []string{"OK", "VALUE 8\r\nabcdefjg\r\n"}
 
 	go Client(chann, cmd, "mc")
-	for i := 0; i < n; i++ {
-		//fmt.Println("Before reading from channel")
+	for i := 0; i < n-1; i++ {
 		R := <-chann
-		//fmt.Println("After reading from channel")
 		Rline := strings.Split(R, "\r\n")
 		r := strings.Fields(Rline[0])
-		fmt.Println("r is:",r)
 		if i == 0 {
 			R = r[0]
 		} else if i == 1 {
@@ -282,4 +277,5 @@ func TestNoReply(t *testing.T) {
 	}
 
 }
-*/
+
+

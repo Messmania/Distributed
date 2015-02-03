@@ -1,6 +1,7 @@
 package Server
 
 import (
+	"bufio"
 	"log"
 	"math"
 	"math/rand"
@@ -46,31 +47,37 @@ func Server() {
 }
 
 func handleClient(conn net.Conn, db map[string]*Data) {
+	reader := bufio.NewReader(conn)
 	for true {
-		var buf [512]byte
-		n, err := conn.Read(buf[0:])
+		str, err := reader.ReadString('\n')
 		if err != nil {
 			return
 		}
-		//Server response
+		//Server response and value field from command
 		sr := ""
+		value := ""
+		key := ""
 
-		//Variable line contains one or two lines of cmds, cmd contains individual fields of command
-		str := string(buf[0:n])
-		line := strings.Split(str, "\r\n")
-		cmd := strings.Fields(line[0])
+		//cmd contains individual fields of command
+		cmd := strings.Fields(str)
 		op := strings.ToLower(cmd[0])
-		value := line[1]
 		l := len(cmd)
-		key := cmd[1]
+		if l > 1 {
+			key = cmd[1]
+		}
 
 		switch op {
 		case "set":
 			if l == 4 || (l == 5 && cmd[4] == "noreply") {
 				numBStr := cmd[3]
 				expStr := cmd[2]
-				sr = setFields(db, expStr, numBStr, value, key, l, op)
+				numb, err1 := strconv.ParseInt(numBStr, 0, 64)
+				checkErr(err1)
+				value = readNBytes(numb, reader)
+				sr = setFields(db, expStr, numb, value, key, l, op)
 			} else {
+				//Discarding value bytes
+				reader.ReadString('\n')
 				sr = "ERR_CMD_ERR\r\n"
 			}
 		case "get":
@@ -89,16 +96,22 @@ func handleClient(conn net.Conn, db map[string]*Data) {
 					newVersion := cmd[3]
 					numBStr := cmd[4]
 					expStr := cmd[3]
+					numb, err1 := strconv.ParseInt(numBStr, 0, 64)
+					checkErr(err1)
+					value = readNBytes(numb, reader)
 					if newVersion == oldVersion {
-						sr = setFields(db, expStr, numBStr, value, key, l, op)
+						sr = setFields(db, expStr, numb, value, key, l, op)
 					} else {
 						sr = "ERR_VERSION\r\n"
 					}
 				} else {
 					globMutex.RUnlock()
+					reader.ReadString('\n')
 					sr = "ERRNOTFOUND\r\n"
 				}
 			} else {
+			        //Discard the value bytes
+				reader.ReadString('\n')
 				sr = "ERR_CMD_ERR\r\n"
 			}
 		case "delete":
@@ -107,14 +120,26 @@ func handleClient(conn net.Conn, db map[string]*Data) {
 			sr = "ERRINTERNAL\r\n"
 		}
 
-		_, err2 := conn.Write([]byte(sr))
-		if err2 != nil {
-			return
+		if sr != "" {
+			_, err2 := conn.Write([]byte(sr))
+			if err2 != nil {
+				return
+			}
 		}
 	}
 }
 
-func setFields(db map[string]*Data, expStr string, numBStr string, value string, key string, l int, op string) (sr string) {
+func readNBytes(numb int64, reader *bufio.Reader) (value string) {
+	for n := 0; n != int(numb+2); n++ {
+		v, err := reader.ReadByte()
+		checkErr(err)
+		vStr := string(v)
+		value = value + vStr
+	}
+	return
+}
+
+func setFields(db map[string]*Data, expStr string, numb int64, value string, key string, l int, op string) (sr string) {
 	//Timer handling
 	var oldTimer *time.Timer
 	globMutex.RLock()
@@ -128,14 +153,10 @@ func setFields(db map[string]*Data, expStr string, numBStr string, value string,
 	//Conversion from string to apt data type
 	exp, err := strconv.ParseInt(expStr, 0, 64)
 	checkErr(err)
-	numb, err1 := strconv.ParseInt(numBStr, 0, 64)
-	checkErr(err1)
 
-	//For incremental version numbers--TO BE ADDED
+	
 	ver := int64(rand.Intn(10000))
-	if numb != int64(len(value)) {
-		numb = int64(len(value))
-	}
+
 	setTime := time.Now().Unix()
 
 	if exp > 0 {
@@ -235,58 +256,9 @@ func checkAndExpire(db map[string]*Data, key string, oldExp int64, setTime int64
 
 }
 
-func Client(ch chan string, strEcho string, c string) {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9000")
-	checkErr(err)
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	checkErr(err)
-	cmd := SeparateCmds(strEcho)
-	for i := 0; i < len(cmd); i++ {
-		conn.Write([]byte(cmd[i]))
-		var rep [512]byte
-		n, err1 := conn.Read(rep[0:])
-		checkErr(err1)
-		reply := string(rep[0:n])
-		ch <- reply
-	}
-	conn.Close()
-}
-
-func SeparateCmds(str string) (cmd []string) {
-	line := strings.Split(str, "\r\n")
-	count := len(line) - 1
-	args := make([][]string, count)
-	for i := 0; i < count; i++ {
-		args[i] = strings.Fields(line[i])
-	}
-	ptr := 0
-	cmd = make([]string, 0)
-	var newC string
-	for j := 0; j < count; j++ {
-		op := strings.ToLower(args[ptr][0])
-		if (op == "set") || (op == "cas") {
-			newC := line[ptr] + "\r\n" + line[ptr+1] + "\r\n"
-			cmd = append(cmd, newC)
-			ptr = ptr + 2
-			j++
-		} else if (op == "get") || (op == "getm") || (op == "delete") {
-			newC = line[ptr] + "\r\n"
-			cmd = append(cmd, newC)
-			ptr++
-		} else if op == "end" {
-			cmd = append(cmd, op)
-			break
-		} else {
-			newC = line[j]
-			cmd = append(cmd, newC)
-			ptr++
-		}
-	}
-	return
-}
-
 func checkErr(err error) {
 	if err != nil {
 		log.Println("Error encountered:", err)
 	}
 }
+
