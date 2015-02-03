@@ -1,0 +1,16 @@
+TImer deletion-DONE
+Naming of database and mutex-DONE
+noreply :(
+separate code into functions-DONE
+remove Os.exit and Fprintf from CheckError-DONE
+separate client code--P
+
+Handling should be
+Problem: conn is getting filled by client's all commands,(loop running doesn't give enough time to server to respond)
+so when server is reading from conn, it just reading assuming only one command is present, which is not the case
+1. handleClient first reads bytes until \r\n, parses and determines type of command and numBytes and then it reads exact number of bytes from conn for data (set,cas)
+using read byte by byte
+
+
+Check length of data field (n-2 or not)-DONE
+How to flush the rest of the data when first part of a cmd is wrong or no need? Then it will be encountered as error for nxt part! Check this thoroughly
