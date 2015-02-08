@@ -1,0 +1,100 @@
+1. Pkg Server contains foll methods
+    connHandler()
+    kvStoreProcessing()
+    sharedLogAPI()
+    
+2. Say 5 servers: all are listening continously on 2 ports(client and server ports)
+3. Client dials-> connHandler makes connections and calls sharedLog.Append()
+
+
+client(){
+-dials server
+-writes cmd
+-waits for response
+}
+
+Pkg Server contains foll methods
+    connHandler()
+    sharedLogAPI()
+    kvStoreProcessing()
+
+
+connHandler(){
+-reads cmd
+-validates it(?) and converts it to byte array cmd and calls sharedLog.Append(cmd)
+-waits for response from Append;
+
+if ErrRedirect from sharedlog.Append()
+    then pass ERR_REDIRECT id host (to client)
+else
+    receives acks from majority on server port
+    var l LogEntry
+    l=s     --(server variable?) --so that that server's log is committed
+    then sets l.committed=true;
+    and commitCh<-l
+}
+
+
+Append(cmd []byte)(LogEntry,error)
+{   if callingServer!=leader
+        var s ErrRedirect:= Leader Id
+        return s
+    else
+        for no.of servers
+        go AppendEntriesRPC(cmd)
+    end
+    
+}
+
+
+kvStoreProcess()
+{
+reads from commitCh
+    process and passes to appropriate client's goroutine (?)
+    
+ }
+ 
+ AppendEntriesRPC()
+{
+what should it do? No details to be implemented
+just return ack to the call from first server
+
+} 
+ 
+
+Each server will instantiate type ServerConfig with their own values.
+Each cluster will instantiate type ClusterConfig and path refers to the cluster's log path where entry will be commited after ack frm all servers in it.
+
+Doubts:
+Should all commands go thru kvstore ?--set does not take noreply any more, because all commands can have redirect errors.??
+how to determine apt client go routine for kvStoreProcess to pass the result
+why route errRedirect thru append?
+Lsn holes? if sharedLog is locked for a single client what if update to sharedlog fails
+
+
+DOUBTS!
+1. what should follower's RPC do? Should it write to its kvstore or wait for assertion from server that it has got the majority??????-2 phase commit
+2. Why append is writing to commitCh as well as returning-- it wont write to commitCh as it would mean
+==================================================================
+
+1. New raft object will create the cluster and may be set the leader?
+2. Server has following functions
+-startServer()
+--Calls func initialise,connHandler
+
+Initialise()
+--instantiates ServerConfig
+connHandler()- calls two go routines
+Problem of Server not waiting for append: should append write the acks to commitCh? so kvStore would be able to read it.
+
+
+
+================================================CHANGES=================================================================
+
+1. In handleClient()
+For now return err from Append is useless because we have included leaderConfig in Raft
+--delete leaderConfig and use clusterConfig and thisServerId to find leader
+
+--use hostname too for creating the connection? Right now it is ignoring the hostname=> hostname:port
+
+

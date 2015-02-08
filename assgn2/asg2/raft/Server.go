@@ -1,6 +1,7 @@
-package Raft
+package raft
 
 import (
+	//"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -9,12 +10,12 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"fmt"
 )
 
 //For distinguishing of clients by the kvStore
-var connLog = make(map[LogEntry]net.Conn)
-var commitCh= make(chan LogEntry)
+var connLog = make(map[*LogEntry]net.Conn)
+
+//var connLog = make(map[string]net.Conn)
 
 //==============================++OLD CODE++(Removed db passing to funcs)====================================================
 
@@ -37,44 +38,37 @@ type Data struct {
 	timerRecord *time.Timer
 }
 
-func kvStoreProcessing() {
-	//reads from commitCh
-	//processes the cmds and calculates the result--same as before with few modifications
-	//writes the response to conn
-
+func kvStoreProcessing(commitCh chan *LogEntry) {
 	logEntry := <-commitCh
-	conn:=connLog[logEntry]
-	/*
-		--separate data from logEntry--PENDING
-
-	*/
-	request := "" //contains extracted command
-	str:= strings.Split(request, "\r\n")
+	conn := connLog[logEntry]
+	//separate cmd from logEntry
+	request := string((*logEntry).Data())
+	str := strings.Split(request, "\r\n")
 	//Server response and value field from command
 	sr := ""
 	key := ""
-
+	op := ""
+	l := 0
+	value := ""
 	//cmd contains individual fields of command
-	cmd := strings.Fields(str[0])
-	op := strings.ToLower(cmd[0])
-	l := len(cmd)
-	//may be empty depending on set or get,doesn't cause a prob as get doesn't use value
-	value := str[1]
-	if l > 1 {
-		key = cmd[1]
-	}else{
-	    return
-	}
 
+	cmd := strings.Fields(str[0])
+	l = len(cmd)
+	if l > 0 {
+		op = strings.ToLower(cmd[0])
+		l = len(cmd)
+		value = str[1]
+		key = cmd[1]
+	} else {
+		return
+	}
 	switch op {
 	case "set":
-
 		if l == 4 || (l == 5 && cmd[4] == "noreply") {
 			numBStr := cmd[3]
 			expStr := cmd[2]
 			numb, err1 := strconv.ParseInt(numBStr, 0, 64)
 			checkErr(err1)
-			//value = readNBytes(numb, reader)
 			sr = setFields(expStr, numb, value, key, l, op)
 		} else {
 			sr = "ERR_CMD_ERR\r\n"
@@ -115,7 +109,6 @@ func kvStoreProcessing() {
 		sr = "ERRINTERNAL\r\n"
 	}
 
-
 	_, err2 := conn.Write([]byte(sr))
 	if err2 != nil {
 		return
@@ -133,7 +126,6 @@ func setFields(expStr string, numb int64, value string, key string, l int, op st
 	}
 	globMutex.RUnlock()
 	timer := oldTimer
-
 	//Conversion from string to apt data type
 	exp, err := strconv.ParseInt(expStr, 0, 64)
 	checkErr(err)
@@ -198,6 +190,7 @@ func getFields(key string, l int, op string) (sr string) {
 			globMutex.RUnlock()
 			sr = "ERRNOTFOUND\r\n"
 		}
+		//globMutex.RUnlock()
 	} else {
 		sr = "ERR_CMD_ERR\r\n"
 	}
@@ -224,6 +217,7 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 	globMutex.RLock()
 	d, exist := db[key]
 	if !exist {
+		globMutex.RUnlock()
 		return
 	}
 	d.recordMutex.Lock()
@@ -242,6 +236,7 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 func checkErr(err error) {
 	if err != nil {
 		log.Println("Error encountered:", err)
+
 	}
 }
 
@@ -250,116 +245,107 @@ func checkErr(err error) {
 //===============================================+++NEW CODE+++============================================
 
 func ServerStart(cluster *ClusterConfig, thisServerId int) {
-	commitCh := make(chan LogEntry)
-	raftObj,err := NewRaft(cluster, thisServerId, commitCh)
-	checkErr(err)
-	connHandler(raftObj)
+	commitCh := make(chan *LogEntry, 4)
+	raftObj, err := NewRaft(cluster, thisServerId, commitCh)
+	if err != nil {
+		checkErr(err)
+		return
+	} else {
+		connHandler(raftObj)
+	}
 }
 
-func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan LogEntry) (raftObj *Raft,err error) {
-	err=nil
-	var sObj ServerConfig
-	//Initialise raftObj
-	raftObj = &Raft{*cluster, sObj, sObj, 0}
-	servArr := cluster.Servers //TO DO-to check pointer access
+func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) (raftObj *Raft, err error) {
+	err = nil
+	var myObj ServerConfig
+	var leaderObj ServerConfig
+
 	//Intialising the ServerConfig struct for itself assuming id is already set in ServerConfig struct
+	servArr := (*cluster).Servers
 	for i, server := range servArr {
 		if i == 0 {
 			//read leader details into raftObj
-			raftObj.LeaderConfig = sObj
-			ldrObj := raftObj.LeaderConfig 
-			ldrObj.Id = thisServerId
-			ldrObj.Hostname = "Server" + string(i)
-			ldrObj.ClientPort = 800+i
-			ldrObj.LogPort = 900+i
+			leaderObj.Id = servArr[i].Id
+			leaderObj.Hostname = servArr[i].Hostname
+			leaderObj.ClientPort = servArr[i].ClientPort
+			leaderObj.LogPort = servArr[i].LogPort
 
 		}
+
 		if server.Id == thisServerId {
-			//read self details into raftObj
-			raftObj.Myconfig = sObj
-			myObj := raftObj.Myconfig
-			//Dummy values
-			myObj.Hostname = "Server" + string(i)
-			myObj.ClientPort = 800+i
-			myObj.LogPort = 800+i
+			//read leader details into raftObj
+			myObj.Id = thisServerId
+			myObj.Hostname = servArr[i].Hostname
+			myObj.ClientPort = servArr[i].ClientPort
+			myObj.LogPort = servArr[i].LogPort
 		}
 	}
 
-	/*
-	   publish AppendEntriesRPC service
-	*/
-	return raftObj,err
+	//Initialise raftObj
+	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh}
+
+	//  publish AppendEntriesRPC service for itself only
+	RegisterTCP_RPCService(myObj.Hostname, myObj.LogPort)
+	return raftObj, err
 }
 
 func connHandler(r *Raft) {
-	go listenToServers(r)
-	go listenToClients(r)
+	//go listenToServers(r)   o need of this as it is already done in RegisterTCP_RPCService
+	listenToClients(r)
 }
 
 func listenToClients(r *Raft) {
 	port := r.Myconfig.ClientPort
-	service := ":" + string(port)
+	service := r.Myconfig.Hostname + ":" + strconv.Itoa(port)
 	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
-	checkErr(err)
-	listener, err := net.ListenTCP("tcp", tcpaddr)
-	checkErr(err)
-	for {
-		conn, err := listener.Accept()
+	if err != nil {
+		checkErr(err)
+		return
+	} else {
+		listener, err := net.ListenTCP("tcp", tcpaddr)
 		if err != nil {
-			continue
-		}
+			checkErr(err)
+			return
+		} else {
+			for {
+				conn, err := listener.Accept()
+				if err != nil {
+					continue
+				} else {
+				go handleClient(conn, r)
+				}
+			}
 
-		go handleClient(conn, r)
+		}
 	}
+
 }
 
 func handleClient(conn net.Conn, r *Raft) {
-    var cmd [512]byte
-	n,err1 := conn.Read(cmd[0:])
-	checkErr(err1)
-	var l SharedLog
-	l=r
-	logEntry, err := l.Append(cmd[0:n])
-
-	//write the logEntry:conn to map
-	connLog[logEntry] = conn
-	status := 0
-	if err == nil {
-		commitCh <- logEntry
-		status = 1
-		go kvStoreProcessing()
-	}
-	if status == 0 {
-		//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
-		ldrHost, ldrPort := r.LeaderConfig.Hostname,r.LeaderConfig.ClientPort
-		errRedirectStr := "ERR_REDIRECT " + string(ldrHost) + " " + string(ldrPort)
-		_, err1 := conn.Write([]byte(errRedirectStr))
-		checkErr(err1)
-	} else {
-		//DO NOTHING--as kvstore will write to conn directly after processing is done
-		fmt.Println("Kv store will write to conn")
-	}
-}
-
-func listenToServers(r *Raft) {
-	//all servers must listen to their resp ports so port must be passed
-	port := r.Myconfig.LogPort
-	service := ":" + string(port) //listening to its log port
-	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
-	checkErr(err)
-	listener, err := net.ListenTCP("tcp", tcpaddr)
-	checkErr(err)
 	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			continue
+		var cmd [512]byte
+		n, err1 := conn.Read(cmd[0:])
+		if err1 != nil {
+			checkErr(err1)
+			break
+		} else {
+			var l SharedLog
+			l = r
+			logEntry, err := l.Append(cmd[0:n])
+			//write the logEntry:conn to map
+			connLog[&logEntry] = conn
+
+			if err == nil {
+				r.commitCh <- (&logEntry)
+				go kvStoreProcessing(r.commitCh)
+
+			} else {
+				//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
+				ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
+				errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
+				_, err1 := conn.Write([]byte(errRedirectStr))
+				checkErr(err1)
+			}
 		}
-		handleServer(conn)
 	}
 }
-
-func handleServer(conn net.Conn){
-    fmt.Println("Nothing for now")
-
-}
-

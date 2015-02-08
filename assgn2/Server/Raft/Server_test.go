@@ -19,6 +19,6 @@ func TestServer(t *testing.T) {
     sfObj := ServerConfig{1,"Server1",8001,9001}
     clustObj.Servers=[]ServerConfig{slObj, sfObj}
     
-    go ServerStart(custObj,0)
-    go ServerStart(custObj,1)
+    go ServerStart(clustObj,0)
+    go ServerStart(clustObj,1)
 }
