@@ -3,6 +3,7 @@ Server-Client architecture based on RAFT(SharedLog) structure with only KVStore 
 Steps to install and run:
  
 1. Set gopath to point to parent of src folder say X
+
     export GOPATH=<path>/X
     
 2. Set PATH to include the gopath's bin
