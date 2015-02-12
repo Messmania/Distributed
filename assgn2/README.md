@@ -10,14 +10,16 @@ Steps to install and run:
 
     export PATH=$PATH:$GOPATH/bin
     
-Installing binaries
-
-3. go install serverStarter
-
-4. go install Read_Exec  
+3. Install the binaries
+    
+    go install serverStarter
+    
+    go install Read_Exec  
        
-Starts the servers
+5. Starts the servers
+    
+    Read_Exec <json file's absolute path>
 
-5. Read_Exec <json file's absolute path>
-
-6. go test asg2_Test
+6. run Test file
+    
+    go test asg2_Test
