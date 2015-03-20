@@ -20,7 +20,7 @@ type LogEntry interface {
 //--implementation
 type LogItem struct {
 	lsn         LSN
-	isCommitted bool
+	isCommitted boolLsn
 	data        []byte
 }
 
