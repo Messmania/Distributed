@@ -1,7 +1,7 @@
 package raft
 
 import (
-	//"fmt"
+	"fmt"
 	"log"
 	//"math"
 	//"math/rand"
@@ -32,6 +32,7 @@ func ServerStart(cluster *ClusterConfig, thisServerId int) *Raft {
 		//return
 		return raftObj //TO BE CHANGED
 	} else {
+		fmt.Println("In else of Serverstart()")
 		go raftObj.ServerSM() //fire all the servers
 		return raftObj
 	}
@@ -48,18 +49,11 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 		if i == 0 {
 			//read leader details into raftObj
 			leaderObj.Id = servArr[i].Id
-			leaderObj.Hostname = servArr[i].Hostname
-			leaderObj.ClientPort = servArr[i].ClientPort
-			leaderObj.LogPort = servArr[i].LogPort
-
 		}
 
 		if server.Id == thisServerId {
 			//read leader details into raftObj
 			myObj.Id = thisServerId
-			myObj.Hostname = servArr[i].Hostname
-			myObj.ClientPort = servArr[i].ClientPort
-			myObj.LogPort = servArr[i].LogPort
 		}
 	}
 
@@ -72,7 +66,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, clientCh, eventCh, 0, -1, 0, myLog, metaData}
 
 	server_raft_map[myObj.Id] = raftObj //mapping server id to its raft object
-	go raftObj.ServerSM()               //Start the raft State Machine
 	return raftObj, err
 }
 
@@ -86,15 +79,18 @@ func checkErr(err error) {
 //=====================++New Code++=========================
 
 func (r *Raft) ServerSM() {
-	log.Println("In server sm")
+	fmt.Println("In server sm", r.Myconfig.Id)
 	state := follower //how to define type for this?--const
 	for {
 		switch state {
 		case follower:
+			fmt.Println("in case follower")
 			state = r.follower()
 		case candidate:
+			fmt.Println("in case candidate of ServSM()")
 			state = r.candidate()
 		case leader:
+			fmt.Println("in case leader")
 			state = r.leader()
 		default:
 			return
