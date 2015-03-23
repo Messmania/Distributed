@@ -1,0 +1,71 @@
+Raft objects are: &{{null [{0} {1} {2} {3} {4}]} {0} {0} 0 0xc208088000 0xc208088060 0 -1 -1 [] {-1 -2 -2 -1 map[3:-1 4:-1 0:-1 1:-1 2:-1] -1}} &{{null [{0} {1} {2} {3} {4}]} {1} {0} 0 0xc2080880c0 0xc208088120 0 -1 -1 [] {-1 -2 -2 -1 map[1:-1 2:-1 3:-1 4:-1 0:-1] -1}} &{{null [{0} {1} {2} {3} {4}]} {2} {0} 0 0xc208088180 0xc2080881e0 0 -1 -1 [] {-1 -2 -2 -1 map[2:-1 3:-1 4:-1 0:-1 1:-1] -1}} &{{null [{0} {1} {2} {3} {4}]} {3} {0} 0 0xc208088240 0xc2080882a0 0 -1 -1 [] {-1 -2 -2 -1 map[3:-1 4:-1 0:-1 1:-1 2:-1] -1}} &{{null [{0} {1} {2} {3} {4}]} {4} {0} 0 0xc208088300 0xc208088360 0 -1 -1 [] {-1 -2 -2 -1 map[1:-1 2:-1 3:-1 4:-1 0:-1] -1}}
+Waits are 4 3 7 5 10
+I am canditate 1 and current term is: 0
+Follower 3 voting true
+Follower 2 voting true
+Votecount is majority, I am new leader 1
+Follower 0 voting true
+In leader(), I am:  1 at 1:30:38 am (IST)
+Hearbeat came to 4 my and request terms are: -1 0
+Response sent by 4 is : true
+Hearbeat came to 2 my and request terms are: -1 0
+Response sent by 2 is : true
+Hearbeat came to 0 my and request terms are: -1 0
+Response sent by 0 is : true
+Hearbeat came to 3 my and request terms are: -1 0
+Response sent by 3 is : true
+
+
+Time to send HBs!
+Hearbeat came to 2 my and request terms are: 0 0
+Response sent by 2 is : true
+Hearbeat came to 3 my and request terms are: 0 0
+Response sent by 3 is : true
+Hearbeat came to 4 my and request terms are: 0 0
+Response sent by 4 is : true
+Hearbeat came to 0 my and request terms are: 0 0
+Response sent by 0 is : true
+
+
+Time to send HBs!
+Hearbeat came to 3 my and request terms are: 0 0
+Response sent by 3 is : true
+Hearbeat came to 0 my and request terms are: 0 0
+Response sent by 0 is : true
+Hearbeat came to 2 my and request terms are: 0 0
+Response sent by 2 is : true
+
+
+Time to send HBs!
+Hearbeat came to 2 my and request terms are: 0 0
+Hearbeat came to 3 my and reqHearbeat came to 4 my and request terms are: 0 0
+Response sent by 3 is : true
+Hearbeat came to 0 my and request terms are: 0 0
+Response sent by 0 is : true
+
+
+Time to send HBs!
+Hearbeat came to 2 my and request terms are: 0 0
+Response sent by 2 is : true
+Hearbeat came to 3 my and request terms are: 0 0
+Response sent by 3 is : true
+Hearbeat came to 4 my and request terms are: 0 0
+Response sent by 4 is : true
+Hearbeat came to 0 my and request terms are: 0 0
+Response sent by 0 is : true
+
+
+Time to send HBs!
+Hearbeat came to 4 my and request terms are: 0 0
+Response sent by 4 is : true
+Response sent by 2 is : true
+Response sent by 3 is : true
+
+
+Time to send HBs!
+Hearbeat came to 0 my and request terms are: 0 0
+Response sent by 0 is : true
+uest terms are: 0 0
+Response sent by 3 is : true
+Hearbeat came to 2 my and request terms are: 0 0
+Response sent by 2 is : true
