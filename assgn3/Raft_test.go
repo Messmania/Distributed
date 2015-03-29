@@ -40,10 +40,10 @@ func Test_StartServers(t *testing.T) {
 	//Firing server SM in parallel
 
 	//In code, leader sends HBs every 2sec , so keep timeout of follower more than that
-	w0 := 4  //rand.Intn(2)
-	w1 := 3  //rand.Intn(15)
+	w0 := 6  //rand.Intn(2)
+	w1 := 5  //rand.Intn(15)
 	w2 := 7  //rand.Intn(10)
-	w3 := 5  //rand.Intn(10)
+	w3 := 8  //rand.Intn(10)
 	w4 := 10 //rand.Intn(22)
 
 	fmt.Println("Waits are", w0, w1, w2, w3, w4)
@@ -55,7 +55,9 @@ func Test_StartServers(t *testing.T) {
 	go r4.ServerSM(w4)
 	//var testChan = make(chan int)
 	//t.Log("End of test method")
-	a := time.Duration(5)
+
+	//Allowing time so that leader can be elected
+	a := time.Duration(8)
 	time.Sleep(time.Second * a)
 
 	//This makes server 1 leader
@@ -63,6 +65,7 @@ func Test_StartServers(t *testing.T) {
 
 //Passed
 func Test_ClientAppend_ToLeader(t *testing.T) {
+	fmt.Println("Testing single client append to leader")
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := true
 	response, err := r1.Append([]byte(set1))
@@ -74,32 +77,6 @@ func Test_ClientAppend_ToLeader(t *testing.T) {
 	if expected != commitStatus {
 		t.Error("Mismatch!", expected, string(response.Data()))
 	}
-}
-
-//Passed
-func Test_ClientAppendToFollowers(t *testing.T) {
-	const n int = 4
-	set1 := "set abc 20 8\r\nabcdefjg\r\n"
-	expected := false
-	//response:=[]LogItem{}--typecasting error
-	response := [n]LogEntry{}
-	err := [n]error{nil, nil}
-	r := [n]*Raft{r0, r2, r3, r4}
-	for i := 0; i < n; i++ {
-		response[i], err[i] = r[i].Append([]byte(set1))
-	}
-
-	//response := <-r1.commitCh
-	for i := 0; i < n; i++ {
-		if err[i] != nil {
-			fmt.Println("Error!!")
-		}
-		commitStatus := response[i].Committed()
-		if expected != commitStatus {
-			t.Error("Mismatch!", expected, string(response[i].Data()))
-		}
-	}
-
 }
 
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
@@ -128,7 +105,36 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 		}
 	}
 
+	//wait to check if heartbeats are being sent
+
 }
+
+//Passed
+func Test_ClientAppendToFollowers(t *testing.T) {
+	const n int = 4
+	set1 := "set abc 20 8\r\nabcdefjg\r\n"
+	expected := false
+	//response:=[]LogItem{}--typecasting error
+	response := [n]LogEntry{}
+	err := [n]error{nil, nil}
+	r := [n]*Raft{r0, r2, r3, r4}
+	for i := 0; i < n; i++ {
+		response[i], err[i] = r[i].Append([]byte(set1))
+	}
+
+	//response := <-r1.commitCh
+	for i := 0; i < n; i++ {
+		if err[i] != nil {
+			fmt.Println("Error!!")
+		}
+		commitStatus := response[i].Committed()
+		if expected != commitStatus {
+			t.Error("Mismatch!", expected, string(response[i].Data()))
+		}
+	}
+
+}
+
 func Test_LogRepair(t *testing.T) {
 	//Crash one of the follower say 0 for sometime, while leader is sending AEs to other followers
 	//Wake up f0, and now leader should repair the log!

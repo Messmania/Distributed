@@ -1,33 +1,77 @@
-Waits are 4 3 7 5 10
+Waits are 6 5 7 8 10
 In leader(), I am:  1
-I am: 2 Log empty, HB received!(In serviceAppendReq)
+Prep AE_RPC is: [{0 1 -2 -2 [] -1 -1} {0 0 0 0 [] 0 0} {0 1 -2 -2 [] -1 -1} {0 1 -2 -2 [] -1 -1} {0 1 -2 -2 [] -1 -1}]
 Response sent by 2 is : true conditions: -2 0
-I am: 3 Log empty, HB received!(In serviceAppendReq)
+got AE_Response! from :  2 {0 true 2 true}
+ 0
+got AE_Response! from :  4 {0 true 4 true}
 Response sent by 3 is : true conditions: -2 0
-I am: 4 Log empty, HB received!(In serviceAppendReq)
-Response sent by 4 is : true conditions: -2 0
-I am: 0 Log empty, HB received!(In serviceAppendReq)
-Response sent by 0 is : true conditions: -2 0
-got AE_Response! from :  2 {0 true 2}
-Got ack!! 1
-Before if
-got AE_Response! from :  3 {0 true 3}
-Got ack!! 2
-Before if
-Responses received from majority
-Acks received from majority
-got AE_Response! from :  4 {0 true 4}
-Got ack!! 3
-Before if
-Responses received from majority
-got AE_Response! from :  0 {0 true 0}
-Got ack!! 4
-Before if
-Responses received from majority
-In Append,data sent to channel of 1
+got AE_Response! from :  0 {0 true 0 true}
+got AE_Response! from :  3 {0 true 3 true}
+Testing single client append to leader
 Received CA request,cmd is:  set abc 20 8
 abcdefjg
 
+I am: 1 Appended to log! lastindex is 0
+In setNextIndex_All,nextIndex is 0
+In setNextIndex_All,map prep is: map[0:0 1:-1 2:0 3:0 4:0]
+Prep AE_RPC is: [{0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 0 0 0 [] 0 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0}]
+I am: 2 This is append request
+Response sent by 3 is : true conditions: 0 0
+got AE_Response! from :  2 {0 true 2 false}
+I am: 4 This is appenResponses received from majority
+Response sent by 4 is : true conditions: 0 0
+got AE_Response! from :  3 {0 true 3 false}
+Next index of 3 is 0
+I am: 0 This is append request
+got AE_Response! from :  4 {0 true 4 false}
+Next index of 4 is 0
+Responses received from majority
+Acks received from majority
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 0
+Responses received from majority
+Received CA request,cmd is:  set abc 20 8
+abcdefjg
+
+I am: 1 Appended to log! lastindex is 1
+In setNextIndex_All,nextIndex is 1
+In setNextIndex_All,map prep is: map[1:-1 2:1 3:1 4:1 0:1]
+Prep AE_RPC is: [{0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 0 0 0 [] 0 0} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1}]
+I am: 2 This is append request
+Response sent by 2 is : true conditions: 0 0
+I am: 3 This is append request
+Response sent by 3 is : true conditions: 0 0
+I am: 4 This is append request
+Response sent by 4 is : true conditions: 0 0
+I am: 0 This is append request
+Response sent by 0 is : true conditions: 0 0
+got AE_Response! from :  2 {0 true 2 false}
+Next index of 2 is 1
+Responses received from majority
+got AE_Response! from :  3 {0 true 3 false}
+Next index of 3 is 1
+Responses received from majority
+got AE_Response! from :  4 {0 true 4 false}
+Next index of 4 is 1
+Responses received from majority
+Acks received from majority
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 1
+Responses received from majority
+Received CA request,cmd is:  set bcd 30 5
+efghi
+
+I am: 1 Appended to log! lastindex is 2
+In setNextIndex_All,nextIndex is 2
+In setNextIndex_All,map prep is: map[1:-1 2:2 3:2 4:2 0:2]
+Prep AE_RPC is: [{0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 0 0 0 [] 0 0} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2}]
 I am: 0 This is append request
 Response sent by 0 is : true conditions: 0 0
 I am: 2 This is append request
@@ -36,29 +80,99 @@ I am: 3 This is append request
 Response sent by 3 is : true conditions: 0 0
 I am: 4 This is append request
 Response sent by 4 is : true conditions: 0 0
-got AE_Response! from :  0 {0 true 0}
-Got ack!! 1
-Before if
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 2
 Responses received from majority
-got AE_Response! from :  2 {0 true 2}
-Got ack!! 2
-Before if
+got AE_Response! from :  2 {0 true 2 false}
+Next index of 2 is 2
+Responses received from majority
+got AE_Response! from :  3 {0 true 3 false}
+Next index of 3 is 2
 Responses received from majority
 Acks received from majority
-In for loop of commit channel
-got AE_Response! from :  3 {0 true 3}
-Got ack!! 3
-Before if
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  4 {0 true 4 false}
+Next index of 4 is 2
 Responses received from majority
-got AE_Response! from :  4 {0 true 4}
-Got ack!! 4
-Before if
+Received CA request,cmd is:  getm abc
+
+I am: 1 Appended to log! lastindex is 3
+In setNextIndex_All,nextIndex is 3
+In setNextIndex_All,map prep is: map[0:3 1:-1 2:3 3:3 4:3]
+Prep AE_RPC is: [{0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 0 0 0 [] 0 0} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3}]
+I am: 4 This is append request
+I am: 0 This is append request
+got AE_Response! from :  4 {0 true 4 false}
+Response sent by 0 is : true conditions: 0 0
+Next index of 4 is 3
 Responses received from majority
-Response received on commit channel 0xc2080a63a0
---- FAIL: Test_ClientAppend_ToLeader-4 (0.00s)
-	Raft_test.go:72: Mismatch! true set abc 20 8
-		abcdefjg
-		
-FAIL
-exit status 1
-FAIL	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	5.007s
+got AE_Response! from :  3 {0 true 3 false}
+Next index of 3 is 3
+Responses received from majority
+got AE_Response! from :  2 {0 true 2 false}
+Next index of 2 is 3
+Responses received from majority
+Acks received from majority
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 3
+Responses received from majority
+Received CA request,cmd is:  getm bcd
+
+I am: 1 Appended to log! lastindex is 4
+In setNextIndex_All,nextIndex is 4
+In setNextIndex_All,map prep is: map[0:4 1:-1 2:4 3:4 4:4]
+Prep AE_RPC is: [{0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 0 0 0 [] 0 0} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4}]
+I am: 3 This is append request
+Response sent by 3 is : true conditions: 0 0
+I am: 4 This is append request
+Response sent by 4 is : true conditions: 0 0
+I am: 0 This is append request
+Response sent by 0 is : true conditions: 0 0
+I am: 2 This is append request
+got AE_Response! from :  3 {0 true 3 false}
+Next index of 3 is 4
+Responses received from majority
+got AE_Response! from :  4 {0 true 4 false}
+Next index of 4 is 4
+Responses received from majority
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 4
+Responses received from majority
+Acks received from majority
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  2 {0 true 2 false}
+Next index of 2 is 4
+Responses received from majority
+Received CA request,cmd is:  delete bcd
+
+I am: 1 Appended to log! lastindex is 5
+In setNextIndex_All,nextIndex is 5
+In setNextIndex_All,map prep is: map[0:5 1:-1 2:5 3:5 4:5]
+Prep AE_RPC is: [{0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 0 0 0 [] 0 0} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5}]
+I am: 2 This is append request
+I am: 4 This is append request
+Response sent by 4 is : true conditions: 0 0
+nditions: 0 0Next index of 3 is 5
+Responses received from majority
+got AE_Response! from :  2 {0 true 2 false}
+Next index of 2 is 5
+Responses received from majority
+got AE_Response! from :  0 {0 true 0 false}
+Next index of 0 is 5
+Responses received from majority
+Acks received from majority
+Error in opening file is <nil>
+Wrote data
+About to commit
+got AE_Response! from :  4 {0 true 4 false}
+Next index of 4 is 5
+Responses received from majority
+PASS
+ok  	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	8.014s

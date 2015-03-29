@@ -81,6 +81,7 @@ func checkErr(err error) {
 
 //=====================++New Code++=========================
 
+//timeout param added Only for testing
 func (r *Raft) ServerSM(timeout int) {
 	//fmt.Println("In server sm", r.Myconfig.Id)
 	state := follower //how to define type for this?--const
