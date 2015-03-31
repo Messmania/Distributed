@@ -1,178 +1,175 @@
 Waits are 6 5 7 8 10
+In server sm 2
+In follower() 1
+In server sm 4
+In follower() 4
+In server sm 3
+In follower() 3
+I am 1,got request of type intElection started!I am 1
+Testing single client aI am: 1 Votecount is 3
 In leader(), I am:  1
-Prep AE_RPC is: [{0 1 -2 -2 [] -1 -1} {0 0 0 0 [] 0 0} {0 1 -2 -2 [] -1 -1} {0 1 -2 -2 [] -1 -1} {0 1 -2 -2 [] -1 -1}]
-Response sent by 2 is : true conditions: -2 0
-got AE_Response! from :  2 {0 true 2 true}
- 0
-got AE_Response! from :  4 {0 true 4 true}
-Response sent by 3 is : true conditions: -2 0
-got AE_Response! from :  0 {0 true 0 true}
-got AE_Response! from :  3 {0 true 3 true}
-Testing single client append to leader
-Received CA request,cmd is:  set abc 20 8
-abcdefjg
+Received AE response!
+Received AE response!
+Received AE response!
+Received AE response!
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 -1 -1 -1 -1
+Received AE response!
+Received AE response!
+Received AE response!
+Test SingleCA_Leader finished
+Testing MultipleCA to leader
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
+Received AE response!
+Received AE response!
+Received AE response!
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
+Received AE response!
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+Received AE response!
+Received AE response!
+Received AE response!
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+Received AE response!
+Received AE response!
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 3
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+Received AE response!
+Received AE response!
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 4
+New index is 3
+I am 2 My Old and new NI are 4 3
+Received AE response!
+Received AE response!
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 4
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+Received AE response!
+Received AE response!
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 5
+New index is 4
+I am 2 My Old and new NI are 5 4
+Received AE response!
+Received AE response!
+Test MCA_leader completed
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+Received AE response!
 
-I am: 1 Appended to log! lastindex is 0
-In setNextIndex_All,nextIndex is 0
-In setNextIndex_All,map prep is: map[0:0 1:-1 2:0 3:0 4:0]
-Prep AE_RPC is: [{0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 0 0 0 [] 0 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0} {0 1 -1 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] -1 0}]
-I am: 2 This is append request
-Response sent by 3 is : true conditions: 0 0
-got AE_Response! from :  2 {0 true 2 false}
-I am: 4 This is appenResponses received from majority
-Response sent by 4 is : true conditions: 0 0
-got AE_Response! from :  3 {0 true 3 false}
-Next index of 3 is 0
-I am: 0 This is append request
-got AE_Response! from :  4 {0 true 4 false}
-Next index of 4 is 0
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 0
-Responses received from majority
-Received CA request,cmd is:  set abc 20 8
-abcdefjg
 
-I am: 1 Appended to log! lastindex is 1
-In setNextIndex_All,nextIndex is 1
-In setNextIndex_All,map prep is: map[1:-1 2:1 3:1 4:1 0:1]
-Prep AE_RPC is: [{0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 0 0 0 [] 0 0} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1} {0 1 0 0 [115 101 116 32 97 98 99 32 50 48 32 56 13 10 97 98 99 100 101 102 106 103 13 10] 0 1}]
-I am: 2 This is append request
-Response sent by 2 is : true conditions: 0 0
-I am: 3 This is append request
-Response sent by 3 is : true conditions: 0 0
-I am: 4 This is append request
-Response sent by 4 is : true conditions: 0 0
-I am: 0 This is append request
-Response sent by 0 is : true conditions: 0 0
-got AE_Response! from :  2 {0 true 2 false}
-Next index of 2 is 1
-Responses received from majority
-got AE_Response! from :  3 {0 true 3 false}
-Next index of 3 is 1
-Responses received from majority
-got AE_Response! from :  4 {0 true 4 false}
-Next index of 4 is 1
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 1
-Responses received from majority
-Received CA request,cmd is:  set bcd 30 5
-efghi
+Time to send HBs! 12:57:30 am (IST) I am 1
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 4
+I am 4 this is valid leader: 1 got HB
+Received AE response!
+Received AE response!
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 5
+New index is 4
+I am 2 My Old and new NI are 5 4
+Received AE response!
+Received AE response!
 
-I am: 1 Appended to log! lastindex is 2
-In setNextIndex_All,nextIndex is 2
-In setNextIndex_All,map prep is: map[1:-1 2:2 3:2 4:2 0:2]
-Prep AE_RPC is: [{0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 0 0 0 [] 0 0} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2} {0 1 1 0 [115 101 116 32 98 99 100 32 51 48 32 53 13 10 101 102 103 104 105 13 10] 1 2}]
-I am: 0 This is append request
-Response sent by 0 is : true conditions: 0 0
-I am: 2 This is append request
-Response sent by 2 is : true conditions: 0 0
-I am: 3 This is append request
-Response sent by 3 is : true conditions: 0 0
-I am: 4 This is append request
-Response sent by 4 is : true conditions: 0 0
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 2
-Responses received from majority
-got AE_Response! from :  2 {0 true 2 false}
-Next index of 2 is 2
-Responses received from majority
-got AE_Response! from :  3 {0 true 3 false}
-Next index of 3 is 2
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  4 {0 true 4 false}
-Next index of 4 is 2
-Responses received from majority
-Received CA request,cmd is:  getm abc
 
-I am: 1 Appended to log! lastindex is 3
-In setNextIndex_All,nextIndex is 3
-In setNextIndex_All,map prep is: map[0:3 1:-1 2:3 3:3 4:3]
-Prep AE_RPC is: [{0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 0 0 0 [] 0 0} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3} {0 1 2 0 [103 101 116 109 32 97 98 99 13 10] 2 3}]
-I am: 4 This is append request
-I am: 0 This is append request
-got AE_Response! from :  4 {0 true 4 false}
-Response sent by 0 is : true conditions: 0 0
-Next index of 4 is 3
-Responses received from majority
-got AE_Response! from :  3 {0 true 3 false}
-Next index of 3 is 3
-Responses received from majority
-got AE_Response! from :  2 {0 true 2 false}
-Next index of 2 is 3
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 3
-Responses received from majority
-Received CA request,cmd is:  getm bcd
+Time to send HBs! 12:57:30 am (IST) I am 1
 
-I am: 1 Appended to log! lastindex is 4
-In setNextIndex_All,nextIndex is 4
-In setNextIndex_All,map prep is: map[0:4 1:-1 2:4 3:4 4:4]
-Prep AE_RPC is: [{0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 0 0 0 [] 0 0} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4} {0 1 3 0 [103 101 116 109 32 98 99 100 13 10] 3 4}]
-I am: 3 This is append request
-Response sent by 3 is : true conditions: 0 0
-I am: 4 This is append request
-Response sent by 4 is : true conditions: 0 0
-I am: 0 This is append request
-Response sent by 0 is : true conditions: 0 0
-I am: 2 This is append request
-got AE_Response! from :  3 {0 true 3 false}
-Next index of 3 is 4
-Responses received from majority
-got AE_Response! from :  4 {0 true 4 false}
-Next index of 4 is 4
-Responses received from majority
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 4
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  2 {0 true 2 false}
-Next index of 2 is 4
-Responses received from majority
-Received CA request,cmd is:  delete bcd
 
-I am: 1 Appended to log! lastindex is 5
-In setNextIndex_All,nextIndex is 5
-In setNextIndex_All,map prep is: map[0:5 1:-1 2:5 3:5 4:5]
-Prep AE_RPC is: [{0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 0 0 0 [] 0 0} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5} {0 1 4 0 [100 101 108 101 116 101 32 98 99 100 13 10] 4 5}]
-I am: 2 This is append request
-I am: 4 This is append request
-Response sent by 4 is : true conditions: 0 0
-nditions: 0 0Next index of 3 is 5
-Responses received from majority
-got AE_Response! from :  2 {0 true 2 false}
-Next index of 2 is 5
-Responses received from majority
-got AE_Response! from :  0 {0 true 0 false}
-Next index of 0 is 5
-Responses received from majority
-Acks received from majority
-Error in opening file is <nil>
-Wrote data
-About to commit
-got AE_Response! from :  4 {0 true 4 false}
-Next index of 4 is 5
-Responses received from majority
-PASS
-ok  	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	8.014s
+Time to send HBs! 12:57:30 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+Received AE response!
+Received AE response!
+I am 3 this is valid leader: 1 got HB
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 3
+Received AE response!
+Received AE response!
+I am 0 this is valid lFollower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 5
+New index is 4
+I am 2 My Old and new NI are 5 4
+Received AE response!
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 12:57:30 am (IST) I am 1
+
+
+Time to send HBs! 12:57:30 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+Received AE response!
+Received AE response!
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 4
+New index is 3
+I am 2 My Old and new NI are 4 3
+Received AE response!
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 3
+I am 3 this is valid leader: 1 got HB
+Received AE response!
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 3
+New index is 2
+I am 2 My Old and new NI are 3 2
+Received AE response!
+Received AE response!
+Received AE response!
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+Received AE response!
+Received AE response!
+
+
+Time to send HBs! 12:57:32 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+Follower  2 response.term,r.currentTerm: 0 0
+In log repair for  2
+Failed index is: 2
+New index is 1
+I am 2 My Old and new NI are 2 1
+Received AE response!
+
+=========Server 1 crashed now!============
+
+
+
+Time to send HBs! 12:57:34 am (IST) I am 1
+Election started!I am 0
+I am: 0 Votecount is 2
+I am: 0 Votecount is 3
+In leader(), I am:  0
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 1 0 0 4 5
+exit status 2
+FAIL	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	15.014s
