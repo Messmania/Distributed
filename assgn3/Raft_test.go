@@ -61,7 +61,7 @@ func Test_StartServers(t *testing.T) {
 	//t.Log("End of test method")
 
 	//Allowing time so that leader can be elected
-	a := time.Duration(5)
+	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 	//This makes server 1 leader
 }
@@ -90,6 +90,7 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	getm1 := "getm abc\r\n"
 	getm2 := "getm bcd\r\n"
 	del1 := "delete bcd\r\n"
+
 	cmd := []string{set1, set2, getm1, getm2, del1}
 
 	response := [n]LogEntry{}
@@ -139,7 +140,7 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 	}
 
 	//wait to check HBs
-	a := time.Duration(5)
+	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 
 }
@@ -158,13 +159,11 @@ func Test_CommitEntryFromPrevTerm(t *testing.T) {
 //Since r0 is now leader, true pops up on its commit channel
 
 func Test_LeaderChanges(t *testing.T) {
-	a := time.Duration(5)
-	time.Sleep(time.Second * a)
 	crash = true
 	server_to_crash = 1
 	fmt.Println("\n=========Server 1 crashed now!============\n")
 	//giving time to elect a new leader since wait time of Server 0 is 5secs
-	a = time.Duration(6)
+	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 
 	const n int = 4
@@ -191,9 +190,16 @@ func Test_LeaderChanges(t *testing.T) {
 func Test_LogRepair(t *testing.T) {
 	//Crash one of the follower say 0 for sometime, while leader is sending AEs to other followers
 	//Wake up f0, and now leader should repair the log!
+	//append more entries to make log stale!
+	//	set1 := "set abc 20 8\r\nabcdefjg\r\n"
+	//	set3 := "set abc 3 8\r\nabcdefjg\r\n"
+	//	set4 := "set abc 6 7\r\nmonikas\r\n"
+	//	getm3 := "getm abc\r\n"
+	//	cmd := []string{set1, set3, set4, getm3}
+
 	fmt.Println("\n=========Server 1 resuming now!============\n")
 	crash = false
-	a := time.Duration(6)
+	a := time.Duration(8)
 	time.Sleep(time.Second * a)
 
 }

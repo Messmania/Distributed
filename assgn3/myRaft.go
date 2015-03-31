@@ -123,7 +123,7 @@ var crash bool
 var server_to_crash int
 
 //For converting default time unit of ns to secs
-var secs time.Duration = time.Duration(math.Pow10(9))
+var secs time.Duration = time.Duration(math.Pow10(7))
 
 const majority int = 3
 const noOfServers int = 5
@@ -431,9 +431,9 @@ func (r *Raft) leader() int {
 			AppendEntriesTimer = r.StartTimer(AppendEntriesTimeOut, waitTimeAE) //Can be written in HeartBeatTimer too
 			//fmt.Println("Timer assigned a value", AppendEntriesTimer)
 		case AppendEntriesResponse:
-			if r.Myconfig.Id == 1 {
-				fmt.Println("Received AE response!")
-			}
+			//			if r.Myconfig.Id == 1 {
+			//				fmt.Println("Received AE response!")
+			//			}
 			response := req.(AppendEntriesResponse)
 			//fmt.Println("got AE_Response! from : ", response.followerId, response)
 			//r.serviceAppendEntriesResponse(AppendEntriesTimer)
@@ -621,7 +621,7 @@ func (r *Raft) AppendToLog_Leader(cmd []byte) {
 		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].term
 	}
 	//r.currentTerm = term
-
+	fmt.Println("I am leader, Appended to log, last index is", r.myMetaData.lastLogIndex)
 	//fmt.Println("Metadata after appending,lastLogIndex,prevLogIndex,prevLogTerm", r.myMetaData.lastLogIndex, r.myMetaData.prevLogIndex, r.myMetaData.prevLogTerm)
 }
 
@@ -649,7 +649,7 @@ func (r *Raft) AppendToLog_Follower(term int, cmd []byte) {
 	//Write log to file--Since it is a struct to be written to file, direct byte conv is not allowed
 	//use gob/encoding to dump
 	//r.fh_Log.Write([]byte(r.myLog))
-
+	fmt.Println("I am", r.Myconfig.Id, "Appended to log, last index is", r.myMetaData.lastLogIndex)
 }
 
 //Modifies the next index in the map and returns

@@ -1,175 +1,1516 @@
 Waits are 6 5 7 8 10
 In server sm 2
+In follower() 2
+In server sm 1
 In follower() 1
 In server sm 4
-In follower() 4
-In server sm 3
-In follower() 3
+In follower() 0
 I am 1,got request of type intElection started!I am 1
-Testing single client aI am: 1 Votecount is 3
+I am: 1 Votecount is 2
+I am: 1 Votecount is 3
 In leader(), I am:  1
-Received AE response!
-Received AE response!
-Received AE response!
-Received AE response!
-I am: 4 This is append request 
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:31 am (IST) I am 1
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+Testing single client append to leader
+I am leader, Appended to log, last index is 0
+I am: 2 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 -1 -1 -1 -1
-Received AE response!
-Received AE response!
-Received AE response!
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 -1 -1 -1 -1
+I am: 3 This is append request 
+ r.curreI am 0 Appended to log, last index is 0
+I am 3 Appended to log, last index is 0
 Test SingleCA_Leader finished
 Testing MultipleCA to leader
+I am leader, Appended to log, last index is 1
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
 I am: 3 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
-I am: 4 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
-Received AE response!
-Received AE response!
-Received AE response!
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 0 0
-Received AE response!
+I am 3 Appended to log, last index is 1
+I am 4 Appended to log, last index is 1
+I am leader, Appended to log, last index is 2
 I am: 0 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
-I am: 3 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+I am 0 Appended to log, last index is 2
 I am: 2 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
-Received AE response!
-Received AE response!
-Received AE response!
+I am 2 Appended to log, last index is 2
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+I am 3 Appended to log, last index is 2
+I am: 4 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 1 1
+I am 4 Appended to log, last index is 2
+I am leader, Appended to log, last index is 3
 I am: 0 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+I am 0 Appended to log, last index is 3
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+I am 2 Appended to log, last index is 3
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
+I am 3 Appended to log, last index is 3
 I am: 4 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
-Received AE response!
-Received AE response!
-I am: 0 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 3
-I am: 3 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am 4 Appended to log, last index is 3
+I am leader, Appended to log, last index is 4
 I am: 4 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
-Received AE response!
-Received AE response!
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 4
-New index is 3
-I am 2 My Old and new NI are 4 3
-Received AE response!
-Received AE response!
+I am 4 Appended to log, last index is 4
 I am: 0 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am 0 Appended to log, last index is 4
 I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 4
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am 2 Appended to log, last index is 4
+I am: 3 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 3
+I am 3 Appended to log, last index is 4
+I am leader, Appended to log, last index is 5
+I am: 2 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+I am 2 Appended to log, last index is 5
 I am: 3 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+I am 3 Appended to log, last index is 5
 I am: 4 This is append request 
  r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
-Received AE response!
-Received AE response!
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 5
-New index is 4
-I am 2 My Old and new NI are 5 4
-Received AE response!
-Received AE response!
+I am 4 Appended to log, last index is 5
+I am: 0 This is append request 
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 4
+I am 0 Appended to log, last index is 5
 Test MCA_leader completed
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 2 2
-Received AE response!
 
 
-Time to send HBs! 12:57:30 am (IST) I am 1
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 3 4
-I am 4 this is valid leader: 1 got HB
-Received AE response!
-Received AE response!
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 5
-New index is 4
-I am 2 My Old and new NI are 5 4
-Received AE response!
-Received AE response!
-
-
-Time to send HBs! 12:57:30 am (IST) I am 1
-
-
-Time to send HBs! 12:57:30 am (IST) I am 1
-I am 3 this is valid leader: 1 got HB
-Received AE response!
-Received AE response!
-I am 3 this is valid leader: 1 got HB
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 3
-Received AE response!
-Received AE response!
-I am 0 this is valid lFollower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 5
-New index is 4
-I am 2 My Old and new NI are 5 4
-Received AE response!
-I am 4 this is valid leader: 1 got HB
-
-
-Time to send HBs! 12:57:30 am (IST) I am 1
-
-
-Time to send HBs! 12:57:30 am (IST) I am 1
+Time to send HBs! 1:43:32 am (IST) I am 1
 I am 0 this is valid leader: 1 got HB
-Received AE response!
-Received AE response!
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 4
-New index is 3
-I am 2 My Old and new NI are 4 3
-Received AE response!
-I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 0 0 0 4 3
+I am 4 this is valid leader: 1 got HB
 I am 3 this is valid leader: 1 got HB
-Received AE response!
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 3
-New index is 2
-I am 2 My Old and new NI are 3 2
-Received AE response!
-Received AE response!
-Received AE response!
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
 I am 4 this is valid leader: 1 got HB
 I am 0 this is valid leader: 1 got HB
-Received AE response!
-Received AE response!
-
-
-Time to send HBs! 12:57:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
 I am 3 this is valid leader: 1 got HB
-Follower  2 response.term,r.currentTerm: 0 0
-In log repair for  2
-Failed index is: 2
-New index is 1
-I am 2 My Old and new NI are 2 1
-Received AE response!
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 4 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 4 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 3 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+I am 0 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:32 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:33 am (IST) I am 1
+I am 2 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 4 this is valid leader: 1 got HB
+
+
+Time to send HBs! 1:43:33 am (IST) I am 1
+I am 0 this is valid leader: 1 got HB
+I am 3 this is valid leader: 1 got HB
+I am 2 this is valid leader: 1 got HB
 
 =========Server 1 crashed now!============
 
 
 
-Time to send HBs! 12:57:34 am (IST) I am 1
+Time to send HBs! 1:43:33 am (IST) I am 1
 Election started!I am 0
 I am: 0 Votecount is 2
 I am: 0 Votecount is 3
 In leader(), I am:  0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:33 am (IST) I am 0
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am leader, Appended to log, last index is 6
 I am: 2 This is append request 
- r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 1 0 0 4 5
+ r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex 1 0 0 5 5
+I am 4 Appended to log, last index is 6
+I am 2 Appended to log, last index is 6
+
+=========Server 1 resuming now!============
+
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+Received AE Req from  0
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+6
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:34 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+EntriesReqI am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:35 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:36 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:37 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendI am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+s: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditionI am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:38 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 3 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendI am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+EntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:39 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 2 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 3 this is valid leader: 0 got HB
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 2 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+I am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 1,got request of type raft.AppendEntriesReqI am 1 this is valid leader: 0 got HB
+Response sent by 1 is : true conditions: 0 1
+I am 2 this is valid leader: 0 got HB
+I am 3 this is valid leader: 0 got HB
+I am 4 this is valid leader: 0 got HB
+
+
+Time to send HBs! 1:43:40 am (IST) I am 0
+I am 4 this is valid leader: 0 got HB
+I am 1,got request of type intElection started!I am 1
+I am: 1 Votecount is 2
+I am: 1 Votecount is 3
+In leader(), I am:  1
+Follower  3 response.term,r.currentTerm: 2 2
 exit status 2
-FAIL	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	15.014s
+FAIL	_/home/mania/Monika_Coding/GoWorkspace/src/github.com/Messmania/Repositories/Distributed/assgn3	9.526s
