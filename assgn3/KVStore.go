@@ -1,7 +1,7 @@
 package raft
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 	//"math"
 	//"math/rand"
@@ -11,7 +11,7 @@ import (
 	//"strings"
 	//"sync"
 	//"time"
-	"os"
+	//"os"
 )
 
 //Global map for serverid->raftObj mapping
@@ -45,9 +45,9 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	var nextIndexMap = make(map[int]int)
 	var f_details = make(map[int]followerDetails)
 	f_obj := followerDetails{false}
-	var fh_log, fh_cv *os.File
-	var err1, err2 error
-
+	//var fh_log, fh_cv *os.File
+	//var err1, err2 error
+	var pathString_Log, pathString_CV string
 	//Intialising the ServerConfig struct for itself assuming id is already set in ServerConfig struct
 	servArr := (*cluster).Servers
 	for i, server := range servArr { //finding self details from cluster object and loading to myConfig of raft
@@ -62,30 +62,36 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 		}
 		nextIndexMap[i] = -1 //initialising nextIndexes for all in each server
 		f_details[i] = f_obj
-		pathString_Log := "./Disk_Files/S" + strconv.Itoa(i) + "/Log.log"
-		pathString_C_V := "./Disk_Files/S" + strconv.Itoa(i) + "/CV.log"
-		fh_log, err1 = os.Create(pathString_Log)
-		if err1 != nil {
-			panic(err1)
-		}
-		fh_cv, err2 = os.Create(pathString_C_V)
-		if err2 != nil {
-			panic(err1)
-		}
+
+		//		fh_log, err1 = os.Create(pathString_Log)
+		//		if err1 != nil {
+		//			panic(err1)
+		//		}
+		//		fh_cv, err2 = os.Create(pathString_C_V)
+		//		if err2 != nil {
+		//			panic(err1)
+		//		}
 	}
 
+	//Setting paths of disk files
+	pathString_Log = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/Log.log"
+	pathString_CV = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/CV.log"
 	//Initialise raftObj---UPDATE this according to changed raft struct--PENDING
 	//clientCh := make(chan ClientAppendResponse)
 	eventCh := make(chan interface{})
 	//logValue := LogVal{-1, nil}
-	myLog := []LogVal{} //TO BE CHECKED
+
+	myLog := make([]LogVal, 0, 10)
+	//myLog := logVal_obj //TO BE CHECKED
 
 	metaData := LogMetadata{-1, -2, -2, -1, nextIndexMap} //MODIFY raftObj init
 	//how to make directories???--for now --path must exist for file to be created in that path
 
-	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, fh_log, fh_cv}
+	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log}
 
 	server_raft_map[myObj.Id] = raftObj //mapping server id to its raft object
+
+	//fmt.Println("I am", raftObj.Myconfig.Id, " Path strings are:", pathString_CV, pathString_Log)
 	return raftObj, err
 }
 
@@ -100,7 +106,6 @@ func checkErr(err error) {
 
 //timeout param added Only for testing
 func (r *Raft) ServerSM(timeout int) {
-	fmt.Println("In server sm", r.Myconfig.Id)
 	state := follower //how to define type for this?--const
 	for {
 		//		if r.Myconfig.Id == 1 {

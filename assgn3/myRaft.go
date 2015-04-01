@@ -6,7 +6,9 @@ import (
 	//"math/rand"
 	//"strings"
 	"fmt"
+	//"strconv"
 	//"io/ioutil"
+	"encoding/gob"
 	"os"
 	"time"
 )
@@ -81,9 +83,13 @@ type Raft struct {
 	//used by leader only
 	f_specific map[int]followerDetails //map of serverId-details
 
-	//File handles to file to be written to--
-	fh_Log                  *os.File
-	fh_currentTerm_votedFor *os.File
+	//File handles to file to be written to
+	//	fh_Log                  *os.File
+	//	fh_currentTerm_votedFor *os.File
+
+	//Path strings to files on disk
+	path_CV  string
+	path_Log string
 }
 
 //used by leader to track details specific to a follower
@@ -253,21 +259,14 @@ func (r *Raft) sendToAll(msg interface{}) {
 
 //Keeps looping and performing follower functions till it timesout and changes to candidate
 func (r *Raft) follower(timeout int) int {
-	myId := r.Myconfig.Id
-	fmt.Println("In follower()", myId)
+	//myId := r.Myconfig.Id
+	//fmt.Println("In follower()", myId)
 	//start heartbeat timer,timeout func wil place HeartbeatTimeout on channel
 	waitTime := timeout //use random number after func is tested--PENDING
 	HeartBeatTimer := r.StartTimer(HeartbeatTimeout, waitTime)
-	/*
-		if r.Myconfig.Id == 1 {
-			fmt.Println("I am 1, started the heartbeat timer", time.Now().Format(layout))
-		}
-	*/
+
 	for {
 		req := r.receive()
-		if r.Myconfig.Id == 1 {
-			fmt.Printf("I am 1,got request of type %T", req)
-		}
 		switch req.(type) {
 		case AppendEntriesReq:
 			request := req.(AppendEntriesReq) //explicit typecasting
@@ -300,8 +299,8 @@ func (r *Raft) follower(timeout int) int {
 
 //conducts election, returns only when state is changed else keeps looping on outer loop(i.e. restarting elections)
 func (r *Raft) candidate() int {
-	myId := r.Myconfig.Id
-	fmt.Println("Election started!I am", myId)
+	//myId := r.Myconfig.Id
+	//fmt.Println("Election started!I am", myId)
 
 	//reset the votes else it will reflect the votes received in last term
 	r.resetVotes()
@@ -316,7 +315,9 @@ func (r *Raft) candidate() int {
 		//fmt.Println("I am candidate", r.Myconfig.Id, "and current term is now:", r.currentTerm)
 
 		r.votedFor = r.Myconfig.Id //vote for self
+		r.WriteCVToDisk()          //write Current term and votedFor to disk
 		r.f_specific[r.Myconfig.Id] = followerDetails{true}
+		//r.f_specific[r.Myconfig.Id].vote = true --change map to [int]*followerDetails
 
 		//fmt.Println("before calling prepRV")
 		reqVoteObj := r.prepRequestVote() //prepare request vote obj
@@ -330,13 +331,14 @@ func (r *Raft) candidate() int {
 				response := req.(RequestVoteResponse) //explicit typecasting so that fields of struct can be used
 				//fmt.Println("Got the vote", response.voteGranted)
 				if response.voteGranted {
-					//r.f_specific[response.id].vote = true //NOT ABLE TO DO THIS--WHY??
+					//					temp := r.f_specific[response.id] //NOT ABLE TO DO THIS--WHY??--WORK THIS WAY
+					//					temp.vote = true
 
 					r.f_specific[response.id] = followerDetails{true}
 					//r.voteCount = r.voteCount + 1
 				}
 				voteCount := r.countVotes()
-				fmt.Println("I am:", r.Myconfig.Id, "Votecount is", voteCount)
+				//fmt.Println("I am:", r.Myconfig.Id, "Votecount is", voteCount)
 				if voteCount >= majority {
 					//fmt.Println("Votecount is majority, I am new leader", r.Myconfig.Id)
 					ElectionTimer.Stop()
@@ -379,7 +381,7 @@ func (r *Raft) candidate() int {
 					return follower
 				} else {
 					//check if log is same
-					fmt.Println("In candidate, AE_Req-else")
+					//fmt.Println("In candidate, AE_Req-else")
 					send(request.leaderId, appEntriesResponse)
 				}
 			case int:
@@ -452,15 +454,7 @@ func (r *Raft) leader() int {
 				ack := &r.myLog[nextIndex].acks //fails for the first HB response because NI is -1,but since it is HB, control won't come here
 
 				if response.success { //log of followers are consistent and no new leader has come up
-					//ack += 1
-					//fmt.Println("Got ack!!", ack)
-					//This follower's log is consistent and regular HBs to be sent to it.
 
-					//If this response is from logRepair, then update nextIndexMap also , this ack is not counted in total ack--PENDING
-					//Get the entry which was sent to follower using nextIndexMap and increment its ack count when follower sent true
-					//Do not increase ack count if response is for heartbeat, else same follower will keep sending true and increasing the ack count
-					//while others log is being repaired
-					//if !response.isHeartBeat { //--REDUNDANT NOW
 					*ack += 1 //increase the ack count since follower responded true
 					follower_nextIndex := r.myMetaData.nextIndexMap[f_id]
 					if follower_nextIndex < r.myMetaData.lastLogIndex {
@@ -472,11 +466,12 @@ func (r *Raft) leader() int {
 				} else { //retry if follower rejected the rpc
 					//false is sent it means follower is either more latest or its log is stale!
 
-					fmt.Println("Follower ", response.followerId, "response.term,r.currentTerm:", response.term, r.currentTerm)
+					//fmt.Println("Follower ", response.followerId, "response.term,r.currentTerm:", response.term, r.currentTerm)
 					if response.term > r.currentTerm { //this means another server is more up to date than itself
 						r.currentTerm = response.term //update self term with latest leader's term
 						r.votedFor = -1               //since term has increased so votedFor must be reset to reflect for this term
-						fmt.Println("I am ", r.Myconfig.Id, "becoming follower now\n")
+						r.WriteCVToDisk()
+						//fmt.Println("I am ", r.Myconfig.Id, "becoming follower now\n")
 						return follower
 					} else { //Log is stale and needs to be repaired!
 						//fmt.Println("About to send AE_rpc!!")
@@ -484,6 +479,7 @@ func (r *Raft) leader() int {
 						//so timer must be reset
 						//fmt.Println("waitTimeAE is:", waitTimeAE, "time status is", AppendEntriesTimer)
 						AppendEntriesTimer.Reset(time.Duration(waitTimeAE) * secs)
+						HeartbeatTimer.Reset(time.Duration(waitTime) * secs) //reset HB timer too
 						r.LogRepair(response)
 					}
 				}
@@ -549,13 +545,11 @@ func (r *Raft) leader() int {
 		case AppendEntriesReq: // in case some other leader is also in function, it must fall back or remain leader
 
 			request := req.(AppendEntriesReq)
-			if r.Myconfig.Id == 1 {
-				fmt.Println("Received AE Req from ", request.leaderId)
-			}
 			if request.term > r.currentTerm {
 				r.currentTerm = request.term //update self term and step down
 				r.votedFor = -1              //since term has increased so votedFor must be reset to reflect for this term
 				//fmt.Println("In leader,AE_Req case, I am ", r.Myconfig.Id, "becoming follower now, because request.term, r.currentTerm", request.term, r.currentTerm)
+				r.WriteCVToDisk()
 				return follower //sender server is the latest leader, become follower
 			} else {
 				//reject the request sending false
@@ -564,9 +558,7 @@ func (r *Raft) leader() int {
 			}
 
 		case int: //Time out-time to send Heartbeats!
-			//			if r.Myconfig.Id == 1 {
-			fmt.Println("\n\nTime to send HBs!", time.Now().Format(layout), "I am", r.Myconfig.Id)
-			//			}
+			fmt.Println("\n\nTime to send HBs! I am", r.Myconfig.Id)
 			timeout := req.(int)
 			//fmt.Println("Timeout of", r.Myconfig.Id, "is of type:", timeout)
 			r.sendAppendEntriesRPC() //This either sends Heartbeats or retries the failed AE due to which the timeout happened,
@@ -621,19 +613,32 @@ func (r *Raft) AppendToLog_Leader(cmd []byte) {
 		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].term
 	}
 	//r.currentTerm = term
-	fmt.Println("I am leader, Appended to log, last index is", r.myMetaData.lastLogIndex)
+	//fmt.Println("I am leader, Appended to log, last index, its term is", r.myMetaData.lastLogIndex, r.myLog[lastLogIndex].term)
 	//fmt.Println("Metadata after appending,lastLogIndex,prevLogIndex,prevLogTerm", r.myMetaData.lastLogIndex, r.myMetaData.prevLogIndex, r.myMetaData.prevLogTerm)
+
+	//Write to disk
+	r.WriteLogToDisk()
 }
 
 //This is called by a follower since it should be able to overwrite for log repairs
 //Check how to do overwriting in slices--PENDING
-func (r *Raft) AppendToLog_Follower(term int, cmd []byte) {
+//func (r *Raft) AppendToLog_Follower(term int, cmd []byte) {
+func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 	//r.myMetaData.prevLogIndex = r.myMetaData.lastLogIndex
+	term := request.term
+	cmd := request.entries
+	index := request.prevLogIndex + 1
+	fmt.Println("index is:", index, "Length of log is", len(r.myLog))
 	logVal := LogVal{term, cmd, 0} //make object for log's value field
 	//fmt.Println("Before putting in log,", logVal)
 
-	//How to overwrite in slices???---PENDING
-	r.myLog = append(r.myLog, logVal)
+	//How to overwrite in slices???---PENDING--DONE
+	if len(r.myLog) == index {
+		r.myLog = append(r.myLog, logVal) //when log is empty or that position doesn't exist
+	} else {
+		r.myLog[index] = logVal //overwriting in case of log repair
+	}
+
 	//r.myLog[index] = logVal //append to log, when array is dynamic, i.e. slice, indexing can't be used like normal array
 	//fmt.Println("I am:", r.Myconfig.Id, "Added cmd to my log")
 
@@ -649,7 +654,7 @@ func (r *Raft) AppendToLog_Follower(term int, cmd []byte) {
 	//Write log to file--Since it is a struct to be written to file, direct byte conv is not allowed
 	//use gob/encoding to dump
 	//r.fh_Log.Write([]byte(r.myLog))
-	fmt.Println("I am", r.Myconfig.Id, "Appended to log, last index is", r.myMetaData.lastLogIndex)
+	//fmt.Println("I am", r.Myconfig.Id, "Appended to log, last index is", r.myMetaData.lastLogIndex)
 }
 
 //Modifies the next index in the map and returns
@@ -660,15 +665,12 @@ func (r *Raft) LogRepair(response AppendEntriesResponse) {
 	var nextIndex int
 	fmt.Println("Failed index is:", failedIndex)
 	if failedIndex != 0 {
-		//fmt.Println("My prev nextIndex is not zero")
 		nextIndex = failedIndex - 1 //decrementing follower's nextIndex
-		fmt.Println("New index is", nextIndex)
 
 	} else { //if nextIndex is 0 means, follower doesn't have first entry (of leader's log),so decrementing should not be done, so retry the same entry again!
 		nextIndex = failedIndex
 	}
 	//Added--3:38-23 march
-	//fmt.Println("About to modify next index map")
 	r.myMetaData.nextIndexMap[id] = nextIndex
 	fmt.Println("I am", response.followerId, "My Old and new NI are", failedIndex, nextIndex)
 	return
@@ -713,18 +715,18 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		} else { //log has data so-- for hearbeat, check the index and term of last entry
 			if request.leaderLastLogIndex == myLastIndex && request.term == myLastIndexTerm {
 				//this is heartbeat as last entry is already present in self log
-				fmt.Println("I am", r.Myconfig.Id, "this is valid leader:", request.leaderId, "got HB")
+				//fmt.Println("I am", r.Myconfig.Id, "this is valid leader:", request.leaderId, "got HB")
 				appEntriesResponse.success = true
 				appEntriesResponse.isHeartBeat = true
 			} else { //this is not a heartbeat but append request
-				fmt.Println("I am:", r.Myconfig.Id, "This is append request \n r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex", r.currentTerm, myLastIndexTerm, request.prevLogTerm, myLastIndex, request.prevLogIndex)
+				//fmt.Println("I am:", r.Myconfig.Id, "This is append request \n r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex", r.currentTerm, myLastIndexTerm, request.prevLogTerm, myLastIndex, request.prevLogIndex)
 
 				//term and index of self last entry and request's previous entries must be checked
 				//but what if r.current term has increased to more than the term of last log entry due to repeated elections but no CA req during that time
 				//so extract the last term from self log--previously it was being compared to r.currentTerm--FAILING NOW--FIXED
 				if request.prevLogTerm == myLastIndexTerm && request.prevLogIndex == r.myMetaData.lastLogIndex { //log is consistent till now
-					//fmt.Println("In if: ")
-					r.AppendToLog_Follower(request.term, request.entries) //append to log
+					fmt.Println("Log is consistent till now! Going to append new entry")
+					r.AppendToLog_Follower(request) //append to log
 					//fmt.Println("Appended to log,my log is", r.myLog)
 					r.currentTerm = request.term
 					appEntriesResponse.success = true
@@ -739,9 +741,8 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		r.myMetaData.commitIndex = int(math.Min(leaderCI, myLI))
 	}
 	appEntriesResponse.term = r.currentTerm
-	if r.Myconfig.Id == 1 {
-		fmt.Println("Response sent by", r.Myconfig.Id, "is :", appEntriesResponse.success, "conditions:", request.prevLogTerm, r.currentTerm)
-	}
+	fmt.Println("Response sent by", r.Myconfig.Id, "is :", appEntriesResponse.success)
+
 	//fmt.Printf("Follower %v sent the AE_ack to %v \n", r.Myconfig.Id, request.leaderId)
 	//Where is it sending to leader's channel??--Added
 	send(request.leaderId, appEntriesResponse)
@@ -759,7 +760,10 @@ func (r *Raft) serviceRequestVote(request RequestVote) {
 		response.voteGranted = true
 		r.votedFor = candidateId
 		r.currentTerm = request.term
-		//write votedFor to disk
+
+		//Writing current term and voteFor to disk
+		r.WriteCVToDisk()
+
 	} else {
 		response.voteGranted = false
 	}
@@ -773,6 +777,37 @@ func (r *Raft) serviceRequestVote(request RequestVote) {
 	send(candidateId, response) //send to sender using send(sender,response)
 }
 
+func (r *Raft) WriteCVToDisk() {
+
+	fh_CV, err1 := os.OpenFile(r.path_CV, os.O_RDWR|os.O_APPEND, 0600)
+	if err1 != nil {
+		panic(err1)
+	}
+	//	fh_CV.Write([]byte(strconv.Itoa(r.currentTerm)))
+	//	fh_CV.Write([]byte(strconv.Itoa(r.votedFor)))
+
+	//Using gob--Dots are coming??
+	cv_encoder := gob.NewEncoder(fh_CV)
+	cv_encoder.Encode(r.currentTerm)
+	cv_encoder.Encode(r.votedFor)
+	fh_CV.Close()
+}
+
+func (r *Raft) WriteLogToDisk() {
+
+	fh_Log, err1 := os.OpenFile(r.path_Log, os.O_RDWR|os.O_APPEND, 0600)
+	if err1 != nil {
+		panic(err1)
+	}
+	//	fh_CV.Write([]byte(strconv.Itoa(r.currentTerm)))
+	//	fh_CV.Write([]byte(strconv.Itoa(r.votedFor)))
+
+	//Using gob
+	cv_encoder := gob.NewEncoder(fh_Log)
+	cv_encoder.Encode(r.myLog)
+	fh_Log.Close()
+
+}
 func (r *Raft) isDeservingCandidate(request RequestVote) bool {
 	//if candidate term is greater don't check votedFor as it will be the last term value and since term is greater it means it hasn't voted in this term
 	//If term is equal check votedFor
@@ -824,7 +859,8 @@ func (r *Raft) prepAppendEntriesReq() (appendEntriesReqArray [noOfServers]Append
 
 			  entries = r.myLog[nextIndex].cmd //entry to be replicated
 			  prevLogIndex = nextIndex - 1
-			  prevLogTerm = r.myMetaData.prevLogTerm
+			  prevLogTerm = r.myMetaData.prevLogTerm //wrong since this is prevLogTerm wrt to lastLogIndex which is still at last element
+				so this must be read from log using prevLogIndex
 
 			*/
 			//if len(r.myLog) != 0 { //removed since, in case of decrementing nextIndexes for log repair, log length is never zero but nextIndex becomes -1
@@ -838,21 +874,13 @@ func (r *Raft) prepAppendEntriesReq() (appendEntriesReqArray [noOfServers]Append
 				term = r.myLog[nextIndex].term
 				entries = r.myLog[nextIndex].cmd //entry to be replicated
 				prevLogIndex = nextIndex - 1     //should be changed to nextIndex-1
-				prevLogTerm = r.myMetaData.prevLogTerm
-				//fmt.Println("Preparing AE_Req OBJECT,prevlogterm is being set to", prevLogTerm)
-				/*--On 30th march 2 am
+				if nextIndex == 0 {
+					prevLogTerm = -1 //since indexing will be log[-1] so it must be set explicitly
+				} else {
+					prevLogTerm = r.myLog[prevLogIndex].term //this is the way to get new prevLogTerm to be sent
+				}
 
-				  if len(r.myLog) == 1 {
-				      //fmt.Println("r.myMetaData.prevLogTerm", r.myMetaData.prevLogTerm)
-				      //prevLogTerm = r.myMetaData.prevLogTerm + 1 //should be changed to term corresponding to nextIndex-1 entry
-				      prevLogTerm = r.myMetaData.prevLogTerm
-				  } else {
-				      //rather than doing the above, read from log as log has valid data in that index now--REMOVE once
-				      //setting of prevLogTerm,prevLogIndex etc are confirmed correctly
-				      prevLogTerm = r.myLog[prevLogIndex].term
-				  }
-				*/
-			} else { //so this is prepReq for heartbeat as nextIndex is -1
+			} else { //so this is prepReq for heartbeat for empty as nextIndex is -1
 				//when log is empty indexing to log shouldn't be done hence copy old values
 				term = r.currentTerm
 				entries = nil
