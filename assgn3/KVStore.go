@@ -1,17 +1,9 @@
 package raft
 
 import (
-	//"fmt"
 	"log"
-	//"math"
-	//"math/rand"
-	//"net"
 	"strconv"
 	//"fmt"
-	//"strings"
-	//"sync"
-	//"time"
-	//"os"
 )
 
 //Global map for serverid->raftObj mapping
@@ -43,7 +35,7 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	err = nil
 	var myObj, leaderObj ServerConfig
 	var nextIndexMap = make(map[int]int)
-	var f_details = make(map[int]followerDetails)
+	var f_details = make(map[int]*followerDetails)
 	f_obj := followerDetails{false}
 	//var fh_log, fh_cv *os.File
 	//var err1, err2 error
@@ -61,16 +53,7 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 			myObj.Id = thisServerId
 		}
 		nextIndexMap[i] = -1 //initialising nextIndexes for all in each server
-		f_details[i] = f_obj
-
-		//		fh_log, err1 = os.Create(pathString_Log)
-		//		if err1 != nil {
-		//			panic(err1)
-		//		}
-		//		fh_cv, err2 = os.Create(pathString_C_V)
-		//		if err2 != nil {
-		//			panic(err1)
-		//		}
+		f_details[i] = &f_obj
 	}
 
 	//Setting paths of disk files
@@ -82,7 +65,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	//logValue := LogVal{-1, nil}
 
 	myLog := make([]LogVal, 0, 10)
-	//myLog := logVal_obj //TO BE CHECKED
 
 	metaData := LogMetadata{-1, -2, -2, -1, nextIndexMap} //MODIFY raftObj init
 	//how to make directories???--for now --path must exist for file to be created in that path

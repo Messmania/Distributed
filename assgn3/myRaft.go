@@ -1,14 +1,10 @@
 package raft
 
 import (
-	//"log"
-	"math"
-	//"math/rand"
-	//"strings"
-	"fmt"
-	//"strconv"
-	//"io/ioutil"
 	"encoding/gob"
+	//"fmt"
+	"math"
+	"math/rand"
 	"os"
 	"time"
 )
@@ -52,11 +48,6 @@ type ClusterConfig struct {
 }
 
 type SharedLog interface {
-	// Each data item is wrapped in a LogEntry with a unique
-	// lsn. The only error that will be returned is ErrRedirect,
-	// to indicate the server id of the leader. Append initiates
-	// a local disk write and a broadcast to the other replicas,
-	// and returns without waiting for the result.
 	Append(data []byte) (LogEntry, error)
 }
 
@@ -81,7 +72,7 @@ type Raft struct {
 	myMetaData LogMetadata
 
 	//used by leader only
-	f_specific map[int]followerDetails //map of serverId-details
+	f_specific map[int]*followerDetails //map of serverId-details
 
 	//File handles to file to be written to
 	//	fh_Log                  *os.File
@@ -99,22 +90,12 @@ type followerDetails struct {
 	//nextIndex int
 }
 
-func (r Raft) isThisServerLeader() bool {
-	return r.Myconfig.Id == r.LeaderConfig.Id
-}
-
 func (r *Raft) Append(data []byte) (LogEntry, error) {
-	//if (.debug) { //TO CHECK
-	//do nothing
-	//} else {
-	//send to server's eventCh using method send()
-
 	obj := ClientAppendReq{data}
 	send(r.Myconfig.Id, obj)
 	//fmt.Println("I am", r.Myconfig.Id, "In Append,data sent to channel of", r.Myconfig.Id)
 	response := <-r.commitCh
 	//fmt.Println("Response received on commit channel", response)
-	//return response.logEntry, response.ret_error
 	return *response, nil
 }
 
@@ -137,6 +118,7 @@ const (
 	ElectionTimeout      = iota
 	HeartbeatTimeout     = iota
 	AppendEntriesTimeOut = iota
+	RetryTimeOut         = iota
 )
 
 //type logDB map[int]LogVal //map is not ordered!! Change this to array or linked list--DONE(changed to array)
@@ -307,7 +289,8 @@ func (r *Raft) candidate() int {
 
 	//--start election timer for election-time out time, so when responses stop coming it must restart the election
 
-	waitTime := 12
+	waitTime := 10
+	//fmt.Println("ELection timeout is", waitTime)
 	ElectionTimer := r.StartTimer(ElectionTimeout, waitTime)
 	//This loop is for election process which keeps on going until a leader is elected
 	for {
@@ -316,7 +299,7 @@ func (r *Raft) candidate() int {
 
 		r.votedFor = r.Myconfig.Id //vote for self
 		r.WriteCVToDisk()          //write Current term and votedFor to disk
-		r.f_specific[r.Myconfig.Id] = followerDetails{true}
+		r.f_specific[r.Myconfig.Id].vote = true
 		//r.f_specific[r.Myconfig.Id].vote = true --change map to [int]*followerDetails
 
 		//fmt.Println("before calling prepRV")
@@ -334,7 +317,7 @@ func (r *Raft) candidate() int {
 					//					temp := r.f_specific[response.id] //NOT ABLE TO DO THIS--WHY??--WORK THIS WAY
 					//					temp.vote = true
 
-					r.f_specific[response.id] = followerDetails{true}
+					r.f_specific[response.id].vote = true
 					//r.voteCount = r.voteCount + 1
 				}
 				voteCount := r.countVotes()
@@ -397,153 +380,51 @@ func (r *Raft) candidate() int {
 
 //Keeps sending heartbeats until state changes to follower
 func (r *Raft) leader() int {
-	fmt.Println("In leader(), I am: ", r.Myconfig.Id)
-	/*start heartbeat-sending timer, after timeout send heartbeats to all servers--using r.sendToAll(heartbeat) and keep checking
-	  if it is still the leader before sending heartbeat i.e. in timeOut func if(leader) then send HB!
-	  or
-	  fire a go routine which loops forever and sends heartbeats after a fix time--What if this leader is demoted?
-	  //send heartbeat immediately , when elected leader
-	  Then terminate the func */
-	//r.setNextIndex_All()
-	r.sendAppendEntriesRPC()                                   //send Heartbeats
-	waitTime := 4                                              //duration between two heartbeats
-	waitTimeAE := 2                                            //max time to wait for AE_Response
+	//fmt.Println("In leader(), I am: ", r.Myconfig.Id)
+
+	r.sendAppendEntriesRPC() //send Heartbeats
+	//waitTime := 4            //duration between two heartbeats
+	waitTime := rand.Intn(6)
+	//fmt.Println("Heartbeat time out is", waitTime)
+
+	waitTimeAE := 5                                            //max time to wait for AE_Response
 	HeartbeatTimer := r.StartTimer(HeartbeatTimeout, waitTime) //starts the timer and places timeout object on the channel
 	var AppendEntriesTimer *time.Timer
+	//var RetryTimer *time.Timer //this is the timer for max retries, if it still doesn't get the responses, it will step down as a follower
+	//RetryTimer = r.StartTimer(RetryTimeOut, 40)
 	//fmt.Println("I am", r.Myconfig.Id, "timer created", AppendEntriesTimer)
-	//ack := 0
-	responseCount := 0
 	for {
 
 		req := r.receive() //wait for client append req,extract the msg received on self eventCh
 		switch req.(type) {
 		case ClientAppendReq:
-			HeartbeatTimer.Stop() // request for append will be sent now and will server as Heartbeat too
+			//reset the heartbeat timer, now this sendRPC will maintain the authority of the leader
+			HeartbeatTimer.Stop()
 			request := req.(ClientAppendReq)
 			data := request.data
 			//fmt.Println("Received CA request,cmd is: ", string(data))
 			//No check for semantics of cmd before appending to log?
 			r.AppendToLog_Leader(data) //append to self log as byte array
 			//fmt.Println("I am:", r.Myconfig.Id, "Appended to log! lastindex is", r.myMetaData.lastLogIndex)
-			r.setNextIndex_All() //Added-28 march for LogRepair
-			//reset the heartbeat timer, now this sendRPC will maintain the authority of the leader
-
-			//ack = 0                                                             //reset the prev ack values
-			r.sendAppendEntriesRPC()                                            //random value as max time for receiving AE_responses
+			r.sendAppendEntriesRPC()
 			AppendEntriesTimer = r.StartTimer(AppendEntriesTimeOut, waitTimeAE) //Can be written in HeartBeatTimer too
-			//fmt.Println("Timer assigned a value", AppendEntriesTimer)
+			//fmt.Println("I am", r.Myconfig.Id, "Timer assigned a value", AppendEntriesTimer)
 		case AppendEntriesResponse:
-			//			if r.Myconfig.Id == 1 {
-			//				fmt.Println("Received AE response!")
-			//			}
 			response := req.(AppendEntriesResponse)
 			//fmt.Println("got AE_Response! from : ", response.followerId, response)
-			//r.serviceAppendEntriesResponse(AppendEntriesTimer)
-			serverCount := len(r.ClusterConfigObj.Servers)
-			responseCount += 1
 
 			//when isHeartBeat is true then success is also true according to the code in serviceAEReq so case wont be there when isHB is true and success is false
-			// isHB true means it is a succeeded heartbeat hence no work to do
-			//If it is AE req then only proceed else do nothing and continue
+			// isHB true means it is a succeeded heartbeat hence no work to do if it is AE req then only proceed else do nothing and continue
 			//So when follower's log is stale or he is more latest, it would set isHB false
 			if !response.isHeartBeat {
-				f_id := response.followerId
-				nextIndex := r.myMetaData.nextIndexMap[f_id]
-				//fmt.Println("Next index of", f_id, "is", nextIndex)
-
-				ack := &r.myLog[nextIndex].acks //fails for the first HB response because NI is -1,but since it is HB, control won't come here
-
-				if response.success { //log of followers are consistent and no new leader has come up
-
-					*ack += 1 //increase the ack count since follower responded true
-					follower_nextIndex := r.myMetaData.nextIndexMap[f_id]
-					if follower_nextIndex < r.myMetaData.lastLogIndex {
-						//this means this ack came for log repair request, so nextIndex must be advanced till it becomes equal to leader's last index
-						r.myMetaData.nextIndexMap[f_id] += 1
-					}
-					//}
-
-				} else { //retry if follower rejected the rpc
-					//false is sent it means follower is either more latest or its log is stale!
-
-					//fmt.Println("Follower ", response.followerId, "response.term,r.currentTerm:", response.term, r.currentTerm)
-					if response.term > r.currentTerm { //this means another server is more up to date than itself
-						r.currentTerm = response.term //update self term with latest leader's term
-						r.votedFor = -1               //since term has increased so votedFor must be reset to reflect for this term
-						r.WriteCVToDisk()
-						//fmt.Println("I am ", r.Myconfig.Id, "becoming follower now\n")
-						return follower
-					} else { //Log is stale and needs to be repaired!
-						//fmt.Println("About to send AE_rpc!!")
-						//This means new AE_RPC is being sent for log repair by decrementing the nextIndex to be sent for replication
-						//so timer must be reset
-						//fmt.Println("waitTimeAE is:", waitTimeAE, "time status is", AppendEntriesTimer)
-						AppendEntriesTimer.Reset(time.Duration(waitTimeAE) * secs)
-						HeartbeatTimer.Reset(time.Duration(waitTime) * secs) //reset HB timer too
-						r.LogRepair(response)
-					}
+				retVal := r.serviceAppendEntriesResponse(response, AppendEntriesTimer, HeartbeatTimer, waitTimeAE, waitTime)
+				if retVal == follower {
+					return follower
 				}
-				//if responseCount >= majority { //convert this nested ifs to && if condition
-				//fmt.Println("Responses received from majority")
-				if *ack == majority { //are all positive acks? if not wait for responses
-					//fmt.Println("Acks received from majority")
-					//advance commitIndex only when entry from current term has been replicated
-					if response.term == r.currentTerm { //safety property for commiting entries from older terms
-						prevCommitIndex := r.myMetaData.commitIndex
-						newCommitIndex := r.myMetaData.lastLogIndex
-						//fmt.Println("prev and new CI are:", prevCommitIndex, newCommitIndex)
-						//don't do it before checking if prev entries are committed or not!
-						//r.myMetaData.commitIndex = currentCommitIndex //commitIndex advances,Entries committed!
 
-						//==========Write to file!--Testing--WORKS but when to create the file?
-						data := r.myLog[newCommitIndex].cmd
-						fh, err := os.OpenFile("TestWriteToFile", os.O_RDWR|os.O_APPEND, 0600)
-						//fmt.Println("Error in opening file is", err)
-						if err == nil {
-							fh.Write(data)
-							//fmt.Println("Wrote data")
-							fh.Close()
-						} else {
-							//log the error
-						}
-						//===========Testing ends
-
-						//When commit index advances by more than 1 entry, it should commit(also give for execution to KVStore) all the prev entries too
-						//i.e. check if they are already committed(replicated on majority by checking acks
-						for i := prevCommitIndex + 1; i <= newCommitIndex; i++ {
-							if r.myLog[i].acks >= majority {
-								//advance CI
-								r.myMetaData.commitIndex += 1
-							} else {
-								//fmt.Println("Prev Entries not yet committed, PANICKING!")
-								//when can this case come???--This case will never come--still call panic in case it does
-								panic(fmt.Sprint("ack count is", r.myLog[i].acks))
-
-							}
-							//fmt.Println("About to commit")
-							reply := ClientAppendResponse{}
-							data := r.myLog[i].cmd                               //last entry of leader's log
-							logItem := LogItem{r.CurrentLogEntryCnt, true, data} //lsn is count started from 0
-							r.CurrentLogEntryCnt += 1
-							reply.logEntry = logItem
-							// This response ideally comes from kvStore, so here we must send it to commitCh with committed as True
-							r.commitCh <- &reply.logEntry
-						}
-
-					}
-				}
-				//But what if followers crash? Then it keeps waiting and retries after time out
-				//if server crashes this process or func ends or doesn't execute this statement
-				//this means server must try to replicate entries on all even after it is committed--given in paper
-				//majority response is needed only to advance commit index
-				//CHECK THIS
-				if *ack == serverCount { //entry is replicated on all servers! else keep waiting for acks!
-					AppendEntriesTimer.Stop()
-				}
 			}
 
 		case AppendEntriesReq: // in case some other leader is also in function, it must fall back or remain leader
-
 			request := req.(AppendEntriesReq)
 			if request.term > r.currentTerm {
 				r.currentTerm = request.term //update self term and step down
@@ -558,7 +439,7 @@ func (r *Raft) leader() int {
 			}
 
 		case int: //Time out-time to send Heartbeats!
-			fmt.Println("\n\nTime to send HBs! I am", r.Myconfig.Id)
+			//fmt.Println("\nTime to send HBs! I am", r.Myconfig.Id)
 			timeout := req.(int)
 			//fmt.Println("Timeout of", r.Myconfig.Id, "is of type:", timeout)
 			r.sendAppendEntriesRPC() //This either sends Heartbeats or retries the failed AE due to which the timeout happened,
@@ -570,8 +451,102 @@ func (r *Raft) leader() int {
 				//HeartbeatTimer.Reset(secs * time.Duration(8)) //for checking leader change, setting timer of f4 to 8s--DOESN'T work..-_CHECK
 			} else if timeout == AppendEntriesTimeOut {
 				AppendEntriesTimer.Reset(waitTime_secs) //start the timer again, does this call the TimeOut method again??-YES
-			}
+			} /*else if timeout == RetryTimeOut {
+				//since leader has exhausted his time waiting for responses so it means, either majority is down or leader is partitioned from the network
+				//hence become a follower
+				RetryTimer.Stop()
+				fmt.Println("Stopped the retry timer")
+				return follower
+			}*/
 		}
+	}
+}
+
+//func (r *Raft) serviceAppendEntriesResponse(response AppendEntriesResponse, RetryTimer *time.Timer, AppendEntriesTimer *time.Timer, HeartbeatTimer *time.Timer, waitTimeAE int, waitTime int) int {
+func (r *Raft) serviceAppendEntriesResponse(response AppendEntriesResponse, AppendEntriesTimer *time.Timer, HeartbeatTimer *time.Timer, waitTimeAE int, waitTime int) int {
+	//fmt.Println("In serviceAE_Response")
+	f_id := response.followerId
+	nextIndex := r.myMetaData.nextIndexMap[f_id]
+	//fmt.Println("Next index of", f_id, "is", nextIndex)
+
+	ack := &r.myLog[nextIndex].acks
+
+	if response.success { //log of followers are consistent and no new leader has come up
+		*ack += 1 //increase the ack count since follower responded true
+		follower_nextIndex := r.myMetaData.nextIndexMap[f_id]
+		if follower_nextIndex < r.myMetaData.lastLogIndex {
+			//this means this ack came for log repair request, so nextIndex must be advanced till it becomes equal to leader's last index
+			r.myMetaData.nextIndexMap[f_id] += 1
+		}
+
+	} else { //retry if follower rejected the rpc
+		//false is sent it means follower is either more latest or its log is stale!
+		//fmt.Println("Follower ", response.followerId, "response.term,r.currentTerm:", response.term, r.currentTerm)
+		if response.term > r.currentTerm { //this means another server is more up to date than itself
+			r.currentTerm = response.term //update self term with latest leader's term
+			r.votedFor = -1               //since term has increased so votedFor must be reset to reflect for this term
+			r.WriteCVToDisk()
+			//fmt.Println("I am ", r.Myconfig.Id, "becoming follower now\n")
+			return follower
+		} else { //Log is stale and needs to be repaired!
+			//fmt.Println("About to send AE_rpc!!")
+			//This means new AE_RPC is being sent for log repair by decrementing the nextIndex to be sent for replication
+			//so timer must be reset
+			AppendEntriesTimer.Reset(time.Duration(waitTimeAE) * secs)
+			//tempValue := AppendEntriesTimer.Reset(time.Duration(waitTimeAE) * secs)
+			//fmt.Println("In serviceAE_Response,I am ", r.Myconfig.Id, "timer status is", tempValue)
+			HeartbeatTimer.Reset(time.Duration(waitTime) * secs) //reset HB timer too
+			r.LogRepair(response)
+		}
+	}
+	//if responseCount >= majority { //convert this nested ifs to && if condition
+	//fmt.Println("Responses received from majority")
+	if *ack == majority { //are all positive acks? if not wait for responses
+		//fmt.Println("Acks received from majority")
+		r.advanceCommitIndex(response.term)
+		//RetryTimer.Reset(time.Duration(40) * secs)
+	}
+	//But what if followers crash? Then it keeps waiting and retries after time out
+	//if server crashes this process or func ends or doesn't execute this statement
+	//this means server must try to replicate entries on all even after it is committed--given in paper
+	//majority response is needed only to advance commit index
+	//CHECK THIS--NOT NEEDED
+	//	if *ack == noOfServers { //entry is replicated on all servers! else keep waiting for acks!--PENDING
+	//		AppendEntriesTimer.Stop()
+	//	}
+	return -1
+}
+func (r *Raft) advanceCommitIndex(responseTerm int) {
+	//advance commitIndex only when entry from current term has been replicated
+	if responseTerm == r.currentTerm { //safety property for commiting entries from older terms
+		prevCommitIndex := r.myMetaData.commitIndex
+		newCommitIndex := r.myMetaData.lastLogIndex
+		//fmt.Println("prev and new CI are:", prevCommitIndex, newCommitIndex)
+		//don't do it before checking if prev entries are committed or not!
+		//r.myMetaData.commitIndex = currentCommitIndex //commitIndex advances,Entries committed!
+
+		//When commit index advances by more than 1 entry, it should commit(also give for execution to KVStore) all the prev entries too
+		//i.e. check if they are already committed(replicated on majority by checking acks
+		for i := prevCommitIndex + 1; i <= newCommitIndex; i++ {
+			if r.myLog[i].acks >= majority {
+				//advance CI
+				r.myMetaData.commitIndex += 1
+			} else {
+				//fmt.Println("Prev Entries not yet committed, PANICKING!")
+				//when can this case come???--This case will never come--still call panic in case it does
+				panic(r.myLog[i].acks)
+
+			}
+			//fmt.Println("About to commit")
+			reply := ClientAppendResponse{}
+			data := r.myLog[i].cmd                               //last entry of leader's log
+			logItem := LogItem{r.CurrentLogEntryCnt, true, data} //lsn is count started from 0
+			r.CurrentLogEntryCnt += 1
+			reply.logEntry = logItem
+			// This response ideally comes from kvStore, so here we must send it to commitCh with committed as True
+			r.commitCh <- &reply.logEntry
+		}
+
 	}
 }
 
@@ -618,6 +593,8 @@ func (r *Raft) AppendToLog_Leader(cmd []byte) {
 
 	//Write to disk
 	r.WriteLogToDisk()
+
+	r.setNextIndex_All() //Added-28 march for LogRepair
 }
 
 //This is called by a follower since it should be able to overwrite for log repairs
@@ -628,7 +605,7 @@ func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 	term := request.term
 	cmd := request.entries
 	index := request.prevLogIndex + 1
-	fmt.Println("index is:", index, "Length of log is", len(r.myLog))
+	//fmt.Println("index is:", index, "Length of log is", len(r.myLog))
 	logVal := LogVal{term, cmd, 0} //make object for log's value field
 	//fmt.Println("Before putting in log,", logVal)
 
@@ -660,10 +637,10 @@ func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 //Modifies the next index in the map and returns
 func (r *Raft) LogRepair(response AppendEntriesResponse) {
 	id := response.followerId
-	fmt.Println("In log repair for ", id)
+	//fmt.Println("In log repair for ", id)
 	failedIndex := r.myMetaData.nextIndexMap[id]
 	var nextIndex int
-	fmt.Println("Failed index is:", failedIndex)
+	//fmt.Println("Failed index is:", failedIndex)
 	if failedIndex != 0 {
 		nextIndex = failedIndex - 1 //decrementing follower's nextIndex
 
@@ -672,7 +649,7 @@ func (r *Raft) LogRepair(response AppendEntriesResponse) {
 	}
 	//Added--3:38-23 march
 	r.myMetaData.nextIndexMap[id] = nextIndex
-	fmt.Println("I am", response.followerId, "My Old and new NI are", failedIndex, nextIndex)
+	//fmt.Println("I am", response.followerId, "My Old and new NI are", failedIndex, nextIndex)
 	return
 }
 
@@ -725,7 +702,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 				//but what if r.current term has increased to more than the term of last log entry due to repeated elections but no CA req during that time
 				//so extract the last term from self log--previously it was being compared to r.currentTerm--FAILING NOW--FIXED
 				if request.prevLogTerm == myLastIndexTerm && request.prevLogIndex == r.myMetaData.lastLogIndex { //log is consistent till now
-					fmt.Println("Log is consistent till now! Going to append new entry")
+					//fmt.Println("Log is consistent till now! Going to append new entry")
 					r.AppendToLog_Follower(request) //append to log
 					//fmt.Println("Appended to log,my log is", r.myLog)
 					r.currentTerm = request.term
@@ -741,7 +718,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		r.myMetaData.commitIndex = int(math.Min(leaderCI, myLI))
 	}
 	appEntriesResponse.term = r.currentTerm
-	fmt.Println("Response sent by", r.Myconfig.Id, "is :", appEntriesResponse.success)
+	//fmt.Println("Response sent by", r.Myconfig.Id, "is :", appEntriesResponse.success)
 
 	//fmt.Printf("Follower %v sent the AE_ack to %v \n", r.Myconfig.Id, request.leaderId)
 	//Where is it sending to leader's channel??--Added
@@ -823,7 +800,7 @@ func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
 
 func (r *Raft) resetVotes() {
 	for i := 0; i < noOfServers; i++ {
-		r.f_specific[i] = followerDetails{false}
+		r.f_specific[i].vote = false
 	}
 }
 
@@ -917,7 +894,7 @@ func (r *Raft) prepRequestVote() RequestVote {
 	return reqVoteObj
 }
 
-//Starts the timer with appropriate random number secs
+//Starts the timer with appropriate random number secs, also timeout object is needed for distinguishing between different timeouts
 func (r *Raft) StartTimer(timeoutObj int, waitTime int) (timerObj *time.Timer) {
 	//waitTime := rand.Intn(10)
 	//for testing

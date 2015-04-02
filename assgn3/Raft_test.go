@@ -7,7 +7,7 @@ import (
 	//"strings"
 	//"runtime/debug"
 	"fmt"
-	//"math/rand"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -44,11 +44,11 @@ func Test_StartServers(t *testing.T) {
 	//Firing server SM in parallel
 
 	//In code, leader sends HBs every 2sec , so keep timeout of follower more than that
-	w0 := 6  //rand.Intn(2)
-	w1 := 5  //rand.Intn(15)
-	w2 := 7  //rand.Intn(10)
-	w3 := 8  //rand.Intn(10)
-	w4 := 10 //rand.Intn(22)
+	w0 := rand.Intn(13)
+	w1 := rand.Intn(5)
+	w2 := rand.Intn(10)
+	w3 := rand.Intn(10)
+	w4 := rand.Intn(22)
 
 	fmt.Println("Waits are", w0, w1, w2, w3, w4)
 	//fmt.Println("Waits are", w0, w1, w2)
@@ -155,7 +155,7 @@ func Test_ServerCrash_(t *testing.T) {
 	crash = true
 	server_to_crash = 1
 	fmt.Println("\n=========Server 1 crashed now!============\n")
-	//giving time to elect a new leader since wait time of Server 0 is 5secs
+	//giving time to elect a new leader
 	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 	//Start a timer here and verify that Append call doesn't succeed and timer times out which means S1 is partitioned--PENDING
@@ -163,12 +163,12 @@ func Test_ServerCrash_(t *testing.T) {
 }
 
 //PASSED
-//S1 is crashed so S0 becomes leader as its wait is lesser than others and it is deserving
-//Since r0 is now leader, true pops up on its commit channel
+//S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
+//Since S2 is now leader, true pops up on its commit channel
 func Test_LeaderChanges(t *testing.T) {
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
-	expected := []bool{true, false, false, false}
+	expected := []bool{false, true, false, false}
 	response := [n]LogEntry{}
 	err := [n]error{nil, nil}
 	r := [n]*Raft{r0, r2, r3, r4}
@@ -201,7 +201,7 @@ func Test_LogRepair(t *testing.T) {
 	cmd := []string{set1, set3, set4, getm3}
 	expected := true
 	for i := 0; i < n; i++ {
-		response, err := r0.Append([]byte(cmd[i]))
+		response, err := r2.Append([]byte(cmd[i]))
 		if err != nil {
 			fmt.Println("Error!!")
 		}
@@ -219,6 +219,7 @@ func Test_LogRepair(t *testing.T) {
 }
 
 func Test_CommitEntryFromPrevTerm(t *testing.T) {
-	//crash one follower, and then wake him up after 3 term changes (leader elections?) may be
+	//not able to simulate the scenario for now
+	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
 
 }
