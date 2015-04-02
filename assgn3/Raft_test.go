@@ -3,7 +3,6 @@ package raft
 
 import (
 	//"log"
-	//"fmt"
 	//"strings"
 	//"runtime/debug"
 	"fmt"
@@ -23,8 +22,10 @@ func Test_StartServers(t *testing.T) {
 	//log.Println("initial thread count:", debug.SetMaxThreads(5))
 
 	//reset global variables
+	globMutex.Lock()
 	crash = false
 	server_to_crash = -1
+	globMutex.Unlock()
 
 	//make ClusterConfig object, init it and set 0 as leader for start
 	clustObj := &ClusterConfig{} //set values}
@@ -51,7 +52,6 @@ func Test_StartServers(t *testing.T) {
 	w4 := rand.Intn(22)
 
 	fmt.Println("Waits are", w0, w1, w2, w3, w4)
-	//fmt.Println("Waits are", w0, w1, w2)
 	go r0.ServerSM(w0)
 	go r1.ServerSM(w1)
 	go r2.ServerSM(w2)
@@ -60,7 +60,7 @@ func Test_StartServers(t *testing.T) {
 	//var testChan = make(chan int)
 	//t.Log("End of test method")
 
-	//Allowing time so that leader can be elected
+	//System settling time: Allowing time so that leader can be elected
 	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 	//This makes server 1 leader
@@ -75,7 +75,6 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	if err != nil {
 		fmt.Println("Error!!")
 	}
-	//response := <-r1.commitCh
 	commitStatus := response.Committed()
 	if expected != commitStatus {
 		t.Error("Mismatch!", expected, string(response.Data()))
@@ -114,6 +113,9 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 
 	fmt.Println("Test MCA_leader completed")
 
+	a := time.Duration(2)
+	time.Sleep(time.Second * a)
+
 }
 
 //PASSED
@@ -139,11 +141,6 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 			t.Error("Mismatch!", expected, string(response[i].Data()))
 		}
 	}
-
-	//wait to check HBs
-	a := time.Duration(1)
-	time.Sleep(time.Second * a)
-
 }
 
 func Test_CommitEntryFromCurrentTerm(t *testing.T) {
@@ -152,13 +149,9 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 
 //PASSED
 func Test_ServerCrash_(t *testing.T) {
-	crash = true
-	server_to_crash = 1
+	setCrash(true)
+	setServerToCrash(1)
 	fmt.Println("\n=========Server 1 crashed now!============\n")
-	//giving time to elect a new leader
-	a := time.Duration(1)
-	time.Sleep(time.Second * a)
-	//Start a timer here and verify that Append call doesn't succeed and timer times out which means S1 is partitioned--PENDING
 
 }
 
@@ -166,6 +159,10 @@ func Test_ServerCrash_(t *testing.T) {
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, true pops up on its commit channel
 func Test_LeaderChanges(t *testing.T) {
+	//giving time to elect a new leader
+	a := time.Duration(1)
+	time.Sleep(time.Second * a)
+	//Start a timer here and verify that Append call doesn't succeed and timer times out which means S1 is partitioned--PENDING
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := []bool{false, true, false, false}
@@ -184,7 +181,8 @@ func Test_LeaderChanges(t *testing.T) {
 			t.Error("Mismatch!", expected, string(response[i].Data()))
 		}
 	}
-
+	//	a := time.Duration(1)
+	//	time.Sleep(time.Second * a)
 }
 
 //PASSED
@@ -210,9 +208,9 @@ func Test_LogRepair(t *testing.T) {
 			t.Error("Mismatch!", expected, string(response.Data()))
 		}
 	}
-
 	fmt.Println("\n=========Server 1 resuming now!============\n")
-	crash = false
+	setCrash(false)
+	setServerToCrash(-1)
 	//now Server1's log gets repaired when it starts receiving Heartbeats during this time period--HOW TO TEST?
 	a := time.Duration(1)
 	time.Sleep(time.Second * a)

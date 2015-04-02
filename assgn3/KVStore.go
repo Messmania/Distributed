@@ -1,9 +1,10 @@
 package raft
 
 import (
-	"log"
-	"strconv"
 	//"fmt"
+	"log"
+	"os"
+	"strconv"
 )
 
 //Global map for serverid->raftObj mapping
@@ -57,12 +58,9 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	}
 
 	//Setting paths of disk files
-	pathString_Log = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/Log.log"
-	pathString_CV = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/CV.log"
-	//Initialise raftObj---UPDATE this according to changed raft struct--PENDING
-	//clientCh := make(chan ClientAppendResponse)
+	pathString_CV, pathString_Log = CreateDiskFiles(thisServerId)
+	//fmt.Println("I am:", thisServerId, " Path strings are:", pathString_CV, pathString_Log)
 	eventCh := make(chan interface{})
-	//logValue := LogVal{-1, nil}
 
 	myLog := make([]LogVal, 0, 10)
 
@@ -73,7 +71,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 
 	server_raft_map[myObj.Id] = raftObj //mapping server id to its raft object
 
-	//fmt.Println("I am", raftObj.Myconfig.Id, " Path strings are:", pathString_CV, pathString_Log)
 	return raftObj, err
 }
 
@@ -107,4 +104,31 @@ func (r *Raft) ServerSM(timeout int) {
 			return
 		}
 	}
+}
+
+func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log string) {
+	//Setting paths of disk files
+	pathString_Log = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/Log.log"
+	pathString_CV = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/CV.log"
+
+	//Creating files
+	fh_cv, err_cv := os.Create(pathString_CV)
+
+	if err_cv != nil {
+		log.Println("Error creating cv file", err_cv)
+		panic(err_cv)
+	} else {
+		fh_cv.Close()
+	}
+	fh_log, err_log := os.Create(pathString_Log)
+
+	if err_log != nil {
+		log.Println("Error creating log file", err_log)
+		panic(err_log)
+	} else {
+		fh_log.Close()
+	}
+	//fmt.Print("Paths are:", pathString_CV, pathString_Log)
+	return pathString_CV, pathString_Log
+
 }
