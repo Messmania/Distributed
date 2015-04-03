@@ -5,7 +5,7 @@ import (
 	//"log"
 	//"strings"
 	//"runtime/debug"
-	"fmt"
+	//"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -22,10 +22,8 @@ func Test_StartServers(t *testing.T) {
 	//log.Println("initial thread count:", debug.SetMaxThreads(5))
 
 	//reset global variables
-	globMutex.Lock()
-	crash = false
-	server_to_crash = -1
-	globMutex.Unlock()
+	setCrash(false)
+	setServerToCrash(-1)
 
 	//make ClusterConfig object, init it and set 0 as leader for start
 	clustObj := &ClusterConfig{} //set values}
@@ -51,7 +49,7 @@ func Test_StartServers(t *testing.T) {
 	w3 := rand.Intn(10)
 	w4 := rand.Intn(22)
 
-	fmt.Println("Waits are", w0, w1, w2, w3, w4)
+	//fmt.Println("Waits are", w0, w1, w2, w3, w4)
 	go r0.ServerSM(w0)
 	go r1.ServerSM(w1)
 	go r2.ServerSM(w2)
@@ -67,52 +65,50 @@ func Test_StartServers(t *testing.T) {
 
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
-	fmt.Println("Testing single client append to leader")
+	//fmt.Println("Testing single client append to leader")
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := true
-	response, err := r1.Append([]byte(set1))
-	if err != nil {
-		fmt.Println("Error!!")
-	}
+	myChan := make(chan LogEntry)
+	go r1.Client(myChan, set1)
+	response := <-myChan
 	commitStatus := response.Committed()
 	if expected != commitStatus {
 		t.Error("Mismatch!", expected, string(response.Data()))
 	}
-	fmt.Println("Test SingleCA_Leader finished")
+	//fmt.Println("Test SingleCA_Leader finished")
 }
 
 //PASSED
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	const n int = 5
-	set1 := "set abc 20 8\r\nabcdefjg\r\n"
-	set2 := "set bcd 30 5\r\nefghi\r\n"
+	set1 := "CA1"
+	set2 := "CA2"
 	getm1 := "getm abc\r\n"
 	getm2 := "getm bcd\r\n"
 	del1 := "delete bcd\r\n"
+	chann := make([]chan LogEntry, n)
 
 	cmd := []string{set1, set2, getm1, getm2, del1}
-
-	response := [n]LogEntry{}
-	err := [n]error{nil, nil}
 	expected := true
-	fmt.Println("Testing MultipleCA to leader")
-	for i := 0; i < n; i++ {
-		response[i], err[i] = r1.Append([]byte(cmd[i]))
+	//fmt.Println("Testing MultipleCA to leader")
+
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
 	}
 	for i := 0; i < n; i++ {
-		if err[i] != nil {
-			t.Error("Error in Append func call!!")
-		} else {
-			commitStatus := response[i].Committed()
-			if expected != commitStatus {
-				t.Error("Mismatch!", expected, string(response[i].Data()))
-			}
+		go r1.Client(chann[i], cmd[i])
+	}
+	for i := 0; i < n; i++ {
+		response := <-chann[i]
+		commitStatus := response.Committed()
+		if expected != commitStatus {
+			t.Error("Mismatch!", expected, string(response.Data()))
 		}
 	}
 
-	fmt.Println("Test MCA_leader completed")
+	//fmt.Println("Test MCA_leader completed")
 
-	a := time.Duration(2)
+	a := time.Duration(1)
 	time.Sleep(time.Second * a)
 
 }
@@ -122,22 +118,23 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := false
-	//response := [n]LogItem{} //--typecasting error
-	response := [n]LogEntry{}
-	err := [n]error{nil, nil}
+	chann := make([]chan LogEntry, n)
+
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
+	}
+
 	r := [n]*Raft{r0, r2, r3, r4}
 	for i := 0; i < n; i++ {
-		response[i], err[i] = r[i].Append([]byte(set1))
+		go r[i].Client(chann[i], set1)
 	}
 
 	//response := <-r1.commitCh
 	for i := 0; i < n; i++ {
-		if err[i] != nil {
-			t.Error("Error in Append func call!!")
-		}
-		commitStatus := response[i].Committed()
+		response := <-chann[i]
+		commitStatus := response.Committed()
 		if expected != commitStatus {
-			t.Error("Mismatch!", expected, string(response[i].Data()))
+			t.Error("Mismatch!", expected, string(response.Data()))
 		}
 	}
 }
@@ -150,7 +147,7 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 func Test_ServerCrash_(t *testing.T) {
 	setCrash(true)
 	setServerToCrash(1)
-	fmt.Println("\n=========Server 1 crashed now!============\n")
+	//fmt.Println("\n=========Server 1 crashed now!============\n")
 
 }
 
@@ -164,19 +161,20 @@ func Test_LeaderChanges(t *testing.T) {
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := []bool{false, true, false, false}
-	response := [n]LogEntry{}
-	err := [n]error{nil, nil}
+	chann := make([]chan LogEntry, n)
 	r := [n]*Raft{r0, r2, r3, r4}
-	for i := 0; i < n; i++ {
-		response[i], err[i] = r[i].Append([]byte(set1))
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
 	}
 	for i := 0; i < n; i++ {
-		if err[i] != nil {
-			t.Error("Error in Append func call!!")
-		}
-		commitStatus := response[i].Committed()
+		go r[i].Client(chann[i], set1)
+	}
+
+	for i := 0; i < n; i++ {
+		response := <-chann[i]
+		commitStatus := response.Committed()
 		if expected[i] != commitStatus {
-			t.Error("Mismatch!", expected, string(response[i].Data()))
+			t.Error("Mismatch!", expected, string(response.Data()))
 		}
 	}
 }
@@ -194,17 +192,22 @@ func Test_LogRepair(t *testing.T) {
 	getm3 := "getm abc\r\n"
 	cmd := []string{set1, set3, set4, getm3}
 	expected := true
+	chann := make([]chan LogEntry, n)
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
+	}
+
 	for i := 0; i < n; i++ {
-		response, err := r2.Append([]byte(cmd[i]))
-		if err != nil {
-			fmt.Println("Error!!")
-		}
+		go r2.Client(chann[i], cmd[i])
+	}
+	for i := 0; i < n; i++ {
+		response := <-chann[i]
 		commitStatus := response.Committed()
 		if expected != commitStatus {
 			t.Error("Mismatch!", expected, response.Committed())
 		}
 	}
-	fmt.Println("\n=========Server 1 resuming now!============\n")
+	//fmt.Println("\n=========Server 1 resuming now!============\n")
 	setCrash(false)
 	setServerToCrash(-1)
 	//now Server1's log gets repaired when it starts receiving Heartbeats during this time period--HOW TO TEST?

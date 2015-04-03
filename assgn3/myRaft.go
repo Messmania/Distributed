@@ -2,7 +2,7 @@ package raft
 
 import (
 	"encoding/json"
-	///"fmt"
+	//"fmt"
 	"math"
 	//"math/rand"
 	"os"
@@ -108,6 +108,8 @@ var crash bool
 var server_to_crash int
 var globMutex = &sync.RWMutex{}
 
+//var LSNMutex = &sync.RWMutex{}
+
 //For converting default time unit of ns to millisecs
 var secs time.Duration = time.Millisecond
 
@@ -157,10 +159,11 @@ type AppendEntriesReq struct {
 	leaderLastLogIndex int
 }
 type AppendEntriesResponse struct {
-	term        int
-	success     bool
-	followerId  int
-	isHeartBeat bool
+	term         int
+	success      bool
+	followerId   int
+	isHeartBeat  bool
+	lastLogIndex int //added for parallel appends!-4 April-03:25am
 }
 type ClientAppendReq struct {
 	data []byte
@@ -402,9 +405,6 @@ func (r *Raft) leader() int {
 			responseCount += 1
 			if responseCount >= majority {
 				waitTime_retry := secs * time.Duration(waitStepDown)
-				if r.Myconfig.Id == 1 {
-					//fmt.Println(r.myId(), "Retry timer reset==========")
-				}
 				RetryTimer.Reset(waitTime_retry)
 			}
 			//when isHeartBeat is true then success is also true according to the code in serviceAEReq so case wont be there when isHB is true and success is false
@@ -428,7 +428,7 @@ func (r *Raft) leader() int {
 				return follower //sender server is the latest leader, become follower
 			} else {
 				//reject the request sending false
-				reply := AppendEntriesResponse{r.currentTerm, false, r.Myconfig.Id, false}
+				reply := AppendEntriesResponse{r.currentTerm, false, r.Myconfig.Id, false, r.myMetaData.lastLogIndex}
 				send(request.leaderId, reply)
 			}
 
@@ -457,21 +457,19 @@ func (r *Raft) leader() int {
 
 func (r *Raft) serviceAppendEntriesResp(response AppendEntriesResponse, HeartbeatTimer *time.Timer, waitTimeAE int, waitTime int) int {
 	//fmt.Println("In serviceAE_Response", r.myId(), "received from", response.followerId)
+	//fmt.Println("Next index of", f_id, "is", nextIndex, len(r.myLog))
 	f_id := response.followerId
-	nextIndex := r.myMetaData.nextIndexMap[f_id]
-	//fmt.Println("Next index of", f_id, "is", nextIndex)
-	//adding for safety, test cases are failing sometimes
-	//	var ack *int
-	//	if nextIndex >= 0 {
+	//nextIndex := r.myMetaData.nextIndexMap[f_id]--WRONG
+	nextIndex := response.lastLogIndex
+	//fmt.Println("Next index of", f_id, "is", nextIndex, len(r.myLog))
 	ack := &r.myLog[nextIndex].Acks
-	//	}
-
 	if response.success { //log of followers are consistent and no new leader has come up
-		(*ack) += 1 //increase the ack count since follower responded true
-		follower_nextIndex := r.myMetaData.nextIndexMap[f_id]
+		(*ack) += 1                                           //increase the ack count since follower responded true
+		follower_nextIndex := r.myMetaData.nextIndexMap[f_id] //read again since, another Append at leader might have modified it
 		if follower_nextIndex < r.myMetaData.lastLogIndex {
 			//this means this ack came for log repair request, so nextIndex must be advanced till it becomes equal to leader's last index
 			r.myMetaData.nextIndexMap[f_id] += 1
+			//fmt.Println("Modified nextIndex map", r.myMetaData.nextIndexMap)
 		}
 
 	} else { //retry if follower rejected the rpc
@@ -513,7 +511,7 @@ func (r *Raft) advanceCommitIndex(responseTerm int) {
 				//advance CI
 				r.myMetaData.commitIndex += 1
 
-				//fmt.Println("I am leader, CI is:", r.myMetaData.commitIndex)
+				//fmt.Println(r.myId(), "CI is:", r.myMetaData.commitIndex)
 				reply := ClientAppendResponse{}
 				data := r.myLog[i].Cmd                               //last entry of leader's log
 				logItem := LogItem{r.CurrentLogEntryCnt, true, data} //lsn is count started from 0
@@ -566,11 +564,11 @@ func (r *Raft) AppendToLog_Leader(cmd []byte) {
 	//r.currentTerm = term
 	//fmt.Println("I am leader, Appended to log, last index, its term is", r.myMetaData.lastLogIndex, r.myLog[lastLogIndex].term)
 	//fmt.Println("Metadata after appending,lastLogIndex,prevLogIndex,prevLogTerm", r.myMetaData.lastLogIndex, r.myMetaData.prevLogIndex, r.myMetaData.prevLogTerm)
-
-	//Write to disk
-	//fmt.Println(r.myId(), "In append_leader, calling WriteToDisk")
-	r.WriteLogToDisk()
 	r.setNextIndex_All() //Added-28 march for LogRepair
+	//Write to disk
+	//fmt.Println(r.myId(), "In append_leader, appended to log", string(cmd))
+	r.WriteLogToDisk()
+
 }
 
 //This is called by a follower since it should be able to overwrite for log repairs
@@ -581,25 +579,35 @@ func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 	logVal := LogVal{term, cmd, 0} //make object for log's value field
 
 	if len(r.myLog) == index {
-		r.myLog = append(r.myLog, logVal) //when log is empty or that position doesn't exist
+		r.myLog = append(r.myLog, logVal) //when trying to add a new entry
 	} else {
 		r.myLog[index] = logVal //overwriting in case of log repair
+		//fmt.Println("Overwiriting!!")
 	}
-
+	//fmt.Println(r.myId(), "Append to log", string(cmd))
 	//modify metadata after appending
-	r.myMetaData.lastLogIndex = r.myMetaData.lastLogIndex + 1
-	r.myMetaData.prevLogIndex = r.myMetaData.lastLogIndex
-	if len(r.myLog) == 1 {
-		r.myMetaData.prevLogTerm = r.myMetaData.prevLogTerm + 1
-	} else if len(r.myLog) > 1 {
-		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].Term
+	//r.myMetaData.lastLogIndex = r.myMetaData.lastLogIndex + 1
+	//r.myMetaData.prevLogIndex = r.myMetaData.lastLogIndex
+	//	if len(r.myLog) == 1 {
+	//		r.myMetaData.prevLogTerm = r.myMetaData.prevLogTerm + 1
+	//	} else if len(r.myLog) > 1 {
+	//		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].Term
+	//	}
+
+	//Changed on 4th april, above is wrong in case of overwriting of log
+	r.myMetaData.lastLogIndex = index
+	r.myMetaData.prevLogIndex = index - 1
+	if index == 0 {
+		r.myMetaData.prevLogTerm = r.myMetaData.prevLogTerm + 1 //or simple -1
+	} else if index >= 1 {
+		r.myMetaData.prevLogTerm = r.myLog[index-1].Term
 	}
 
 	//Update commit index
 	leaderCI := float64(request.leaderCommitIndex)
 	myLI := float64(r.myMetaData.lastLogIndex)
 	if request.leaderCommitIndex > r.myMetaData.commitIndex {
-		if myLI == -1 {
+		if myLI == -1 { //REDUNDANT since Append to log will make sure it is never -1,also must not copy higher CI if self LI is -1
 			r.myMetaData.commitIndex = int(leaderCI)
 		} else {
 			r.myMetaData.commitIndex = int(math.Min(leaderCI, myLI))
@@ -668,14 +676,14 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 				//fmt.Println("I am", r.Myconfig.Id, "this is valid leader:", request.leaderId, "got HB", r.myMetaData.commitIndex)
 			} else { //this is not a heartbeat but append request
 				//fmt.Println("I am:", r.Myconfig.Id, "This is append request \n r.currentTerm,mylastTerm,req.prevLogTerm,mylastIndex,req.prevLogIndex", r.currentTerm, myLastIndexTerm, request.prevLogTerm, myLastIndex, request.prevLogIndex)
-				//fmt.Println("I am:", r.Myconfig.Id, "This is append request")
+				//fmt.Println("I am:", r.Myconfig.Id, "This is append request", string(request.entries))
 				//term and index of self last entry and request's previous entries must be checked
 				//but what if r.current term has increased to more than the term of last log entry due to repeated elections but no CA req during that time
 				//so extract the last term from self log--previously it was being compared to r.currentTerm--FAILING NOW--FIXED
-				if request.prevLogTerm == myLastIndexTerm && request.prevLogIndex == r.myMetaData.lastLogIndex { //log is consistent till now
+				if request.prevLogTerm == myLastIndexTerm && request.prevLogIndex == myLastIndex { //log is consistent till now
 					//fmt.Println("Log is consistent till now! Going to append new entry")
 					r.AppendToLog_Follower(request) //append to log
-					//fmt.Println("Appended to log,my log is", r.myLog)
+					//fmt.Println(r.myId(), "Appended to log,sending true for", string(request.entries))
 					r.currentTerm = request.term
 					appEntriesResponse.success = true
 					appEntriesResponse.isHeartBeat = false
@@ -685,6 +693,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 	}
 
 	appEntriesResponse.term = r.currentTerm
+	appEntriesResponse.lastLogIndex = r.myMetaData.lastLogIndex
 	//fmt.Println("Response sent by", r.Myconfig.Id, "is :", appEntriesResponse.success, "to", request.leaderId)
 
 	//fmt.Printf("Follower %v sent the AE_ack to %v \n", r.Myconfig.Id, request.leaderId)
@@ -743,7 +752,7 @@ func (r *Raft) WriteLogToDisk() {
 	if err1 != nil {
 		panic(err1)
 	}
-	//Using json--NOT WORKING
+	//Using json--NOT WORKING--WORKs
 	log_encoder := json.NewEncoder(fh_Log)
 	//	index := r.myMetaData.lastLogIndex
 	//	index_str := strconv.Itoa(index)
@@ -775,18 +784,8 @@ func (r *Raft) resetVotes() {
 
 //preparing object for replicating log value at nextIndex, one for each follower depending on nextIndex read from nextIndexMap
 func (r *Raft) prepAppendEntriesReq() (appendEntriesReqArray [noOfServers]AppendEntriesReq) {
-	//func (r *Raft) prepAppendEntriesReq() map[int]AppendEntriesReq {
-	//populate fields of AppendEntries RPC
-	//fmt.Println("In prepAE, looping now")
-	//r is leader object so it has log details
-	//fmt.Println("NextIndex is:", nextIndex)
-	//Right now, index of array is same as id of server i.e. 0-5 so this would work
-	//if say server ids start from 5 6 7 8 9.. or 0 2 3 7 then return object must be a map of ServerId-Obj
-
 	for i := 0; i < noOfServers; i++ {
-		//fmt.Println("loop i is:", i, r.Myconfig.Id)
 		if i != r.Myconfig.Id {
-			//fmt.Println("Inside if")
 			nextIndex := r.myMetaData.nextIndexMap[i] //read the nextIndex to be sent from map
 			leaderId := r.LeaderConfig.Id
 			var entries []byte
@@ -794,7 +793,7 @@ func (r *Raft) prepAppendEntriesReq() (appendEntriesReqArray [noOfServers]Append
 
 			//if len(r.myLog) != 0 { //removed since, in case of decrementing nextIndexes for log repair, log length is never zero but nextIndex becomes -1
 			if nextIndex >= 0 { //this is AE request with last entry sent (this will be considered as HB when log of follower is consistent)
-
+				//fmt.Println("Next index is", nextIndex, "for server", i)
 				term = r.myLog[nextIndex].Term
 				entries = r.myLog[nextIndex].Cmd //entry to be replicated
 				prevLogIndex = nextIndex - 1     //should be changed to nextIndex-1
@@ -864,7 +863,7 @@ func (r *Raft) setNextIndex_All() {
 			r.myMetaData.nextIndexMap[k] = nextIndex
 		}
 	}
-	//fmt.Println("In setNextIndex_All,map prep is:", r.myMetaData.nextIndexMap)
+	//	fmt.Println("In setNextIndex_All,map prep is:", r.myMetaData.nextIndexMap)
 	return
 }
 
@@ -882,6 +881,17 @@ func (r *Raft) countVotes() (voteCount int) {
 	}
 
 	return
+}
+
+//Calls append func and writes the value returned by it in myChan
+func (r *Raft) Client(myChan chan LogEntry, data string) {
+	//fmt.Println("Client:", data, r.myId())
+	logItem, err := r.Append([]byte(data))
+	if err != nil {
+		//redirect to leader???--ASK!
+	} else {
+		myChan <- logItem
+	}
 }
 
 //For testing
