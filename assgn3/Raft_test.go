@@ -61,8 +61,7 @@ func Test_StartServers(t *testing.T) {
 	//t.Log("End of test method")
 
 	//System settling time: Allowing time so that leader can be elected
-	a := time.Duration(1)
-	time.Sleep(time.Second * a)
+	time.Sleep(time.Second * 1)
 	//This makes server 1 leader
 }
 
@@ -160,8 +159,7 @@ func Test_ServerCrash_(t *testing.T) {
 //Since S2 is now leader, true pops up on its commit channel
 func Test_LeaderChanges(t *testing.T) {
 	//giving time to elect a new leader
-	a := time.Duration(1)
-	time.Sleep(time.Second * a)
+	time.Sleep(time.Second * 1)
 	//Start a timer here and verify that Append call doesn't succeed and timer times out which means S1 is partitioned--PENDING
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
@@ -181,8 +179,6 @@ func Test_LeaderChanges(t *testing.T) {
 			t.Error("Mismatch!", expected, string(response[i].Data()))
 		}
 	}
-	//	a := time.Duration(1)
-	//	time.Sleep(time.Second * a)
 }
 
 //PASSED
@@ -205,19 +201,21 @@ func Test_LogRepair(t *testing.T) {
 		}
 		commitStatus := response.Committed()
 		if expected != commitStatus {
-			t.Error("Mismatch!", expected, string(response.Data()))
+			t.Error("Mismatch!", expected, response.Committed())
 		}
 	}
 	fmt.Println("\n=========Server 1 resuming now!============\n")
 	setCrash(false)
 	setServerToCrash(-1)
 	//now Server1's log gets repaired when it starts receiving Heartbeats during this time period--HOW TO TEST?
-	a := time.Duration(1)
-	time.Sleep(time.Second * a)
+	time.Sleep(time.Second * 1)
 }
 
 func Test_CommitEntryFromPrevTerm(t *testing.T) {
 	//not able to simulate the scenario for now
 	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
+	//crash leader 2 for less than 7 msec, which is next viable leader's timeout i.e. S2
+	//i.e. before its RetryTimer times out??
+	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers agan
 
 }

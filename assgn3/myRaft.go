@@ -108,8 +108,8 @@ var crash bool
 var server_to_crash int
 var globMutex = &sync.RWMutex{}
 
-//For converting default time unit of ns to secs
-var secs time.Duration = time.Duration(math.Pow10(7))
+//For converting default time unit of ns to millisecs
+var secs time.Duration = time.Millisecond
 
 const majority int = 3
 const noOfServers int = 5
@@ -456,16 +456,15 @@ func (r *Raft) leader() int {
 }
 
 func (r *Raft) serviceAppendEntriesResp(response AppendEntriesResponse, HeartbeatTimer *time.Timer, waitTimeAE int, waitTime int) int {
-
 	//fmt.Println("In serviceAE_Response", r.myId(), "received from", response.followerId)
 	f_id := response.followerId
 	nextIndex := r.myMetaData.nextIndexMap[f_id]
 	//fmt.Println("Next index of", f_id, "is", nextIndex)
 	//adding for safety, test cases are failing sometimes
-	//var ack *int
-	//if nextIndex >= 0 {
+	//	var ack *int
+	//	if nextIndex >= 0 {
 	ack := &r.myLog[nextIndex].acks
-	//}
+	//	}
 
 	if response.success { //log of followers are consistent and no new leader has come up
 		(*ack) += 1 //increase the ack count since follower responded true
@@ -842,7 +841,8 @@ func (r *Raft) prepRequestVote() RequestVote {
 
 //Starts the timer with appropriate random number secs, also timeout object is needed for distinguishing between different timeouts
 func (r *Raft) StartTimer(timeoutObj int, waitTime int) (timerObj *time.Timer) {
-	expInSec := secs * time.Duration(waitTime) //gives in seconds
+	//expInSec := secs * time.Duration(waitTime) //gives in seconds
+	expInSec := time.Duration(waitTime) * time.Millisecond
 	timerObj = time.AfterFunc(expInSec, func() {
 		r.TimeOut(timeoutObj)
 	})
