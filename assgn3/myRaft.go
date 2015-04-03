@@ -2,7 +2,7 @@ package raft
 
 import (
 	"encoding/json"
-	//"fmt"
+	///"fmt"
 	"math"
 	//"math/rand"
 	"os"
@@ -123,14 +123,14 @@ const (
 //type logDB map[int]LogVal //map is not ordered!! Change this to array or linked list--DONE(changed to array)
 //type LogDB []LogVal //log is array of type LogVal
 type LogVal struct {
-	term int
-	cmd  []byte //should it be logEntry type?, should not be as isCommited and lsn are useless to store in log
+	Term int
+	Cmd  []byte //should it be logEntry type?, should not be as isCommited and lsn are useless to store in log
 	//they are needed only for kvStore processing i.e. logEntry must be passed to commitCh
 
 	//This is added for commiting entries from prev term--So when there are entries from prev term in leaders log but have not been replicated on mjority
 	//then there must be a flag which is checked before advancing the commitIndex, if false, commit(replicate on maj) them first!
 	//used only by leader
-	acks int
+	Acks int
 }
 type LogMetadata struct {
 	lastLogIndex int //last entry in log,corresponding term is term in LogVal, can also be calculated as len(LogDB)-1
@@ -340,7 +340,7 @@ func (r *Raft) candidate() int {
 						myLastIndexTerm = -1
 
 					} else {
-						myLastIndexTerm = r.myLog[r.myMetaData.lastLogIndex].term
+						myLastIndexTerm = r.myLog[r.myMetaData.lastLogIndex].Term
 					}
 					if request.leaderLastLogIndex == r.myMetaData.lastLogIndex && request.term == myLastIndexTerm { //this is heartbeat from a valid leader
 						appEntriesResponse.success = true
@@ -463,7 +463,7 @@ func (r *Raft) serviceAppendEntriesResp(response AppendEntriesResponse, Heartbea
 	//adding for safety, test cases are failing sometimes
 	//	var ack *int
 	//	if nextIndex >= 0 {
-	ack := &r.myLog[nextIndex].acks
+	ack := &r.myLog[nextIndex].Acks
 	//	}
 
 	if response.success { //log of followers are consistent and no new leader has come up
@@ -503,21 +503,19 @@ func (r *Raft) advanceCommitIndex(responseTerm int) {
 		prevCommitIndex := r.myMetaData.commitIndex
 		newCommitIndex := r.myMetaData.lastLogIndex
 		//fmt.Println(r.myId(), "prev and new CI are:", prevCommitIndex, newCommitIndex)
-		//don't do it before checking if prev entries are committed or not!
-		//r.myMetaData.commitIndex = currentCommitIndex //commitIndex advances,Entries committed!
 
 		//When commit index advances by more than 1 entry, it should commit(also give for execution to KVStore) all the prev entries too
 		//i.e. check if they are already committed(replicated on majority by checking acks
 		for i := prevCommitIndex + 1; i <= newCommitIndex; i++ { //it will always be same in the implementation, i.e. loop will run once only
 			//fmt.Println(r.myId(), "loop var", i, newCommitIndex)
 			//fmt.Println("acks for", i, r.myLog[i].acks)
-			if r.myLog[i].acks >= majority {
+			if r.myLog[i].Acks >= majority {
 				//advance CI
 				r.myMetaData.commitIndex += 1
 
 				//fmt.Println("I am leader, CI is:", r.myMetaData.commitIndex)
 				reply := ClientAppendResponse{}
-				data := r.myLog[i].cmd                               //last entry of leader's log
+				data := r.myLog[i].Cmd                               //last entry of leader's log
 				logItem := LogItem{r.CurrentLogEntryCnt, true, data} //lsn is count started from 0
 				r.CurrentLogEntryCnt += 1
 				reply.logEntry = logItem
@@ -563,13 +561,14 @@ func (r *Raft) AppendToLog_Leader(cmd []byte) {
 		r.myMetaData.prevLogTerm = r.myMetaData.prevLogTerm + 1 //as for empty log prevLogTerm is -2
 
 	} else if len(r.myLog) > 1 { //explicit check, else would have sufficed too, just to eliminate len=0 possibility
-		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].term
+		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].Term
 	}
 	//r.currentTerm = term
 	//fmt.Println("I am leader, Appended to log, last index, its term is", r.myMetaData.lastLogIndex, r.myLog[lastLogIndex].term)
 	//fmt.Println("Metadata after appending,lastLogIndex,prevLogIndex,prevLogTerm", r.myMetaData.lastLogIndex, r.myMetaData.prevLogIndex, r.myMetaData.prevLogTerm)
 
 	//Write to disk
+	//fmt.Println(r.myId(), "In append_leader, calling WriteToDisk")
 	r.WriteLogToDisk()
 	r.setNextIndex_All() //Added-28 march for LogRepair
 }
@@ -593,7 +592,7 @@ func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 	if len(r.myLog) == 1 {
 		r.myMetaData.prevLogTerm = r.myMetaData.prevLogTerm + 1
 	} else if len(r.myLog) > 1 {
-		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].term
+		r.myMetaData.prevLogTerm = r.myLog[r.myMetaData.prevLogIndex].Term
 	}
 
 	//Update commit index
@@ -607,6 +606,7 @@ func (r *Raft) AppendToLog_Follower(request AppendEntriesReq) {
 		}
 	}
 	//fmt.Println(r.myId(), "My CI is:", r.myMetaData.commitIndex)
+	r.WriteLogToDisk()
 }
 
 //Modifies the next index in the map and returns
@@ -650,7 +650,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		if len(r.myLog) == 0 {               //if log is empty
 			myLastIndexTerm = -1
 		} else {
-			myLastIndexTerm = r.myLog[myLastIndex].term
+			myLastIndexTerm = r.myLog[myLastIndex].Term
 		}
 		//This is a HB,here log is empty on both sides so term must not be checked (as leader has incremented its term due to elections)
 		if request.entries == nil && myLastIndex == request.leaderLastLogIndex {
@@ -745,10 +745,12 @@ func (r *Raft) WriteLogToDisk() {
 	}
 	//Using json--NOT WORKING
 	log_encoder := json.NewEncoder(fh_Log)
-	index := r.myMetaData.lastLogIndex
-	index_str := strconv.Itoa(index)
-	data := map[string]LogVal{index_str: r.myLog[index]}
-	log_encoder.Encode(data)
+	//	index := r.myMetaData.lastLogIndex
+	//	index_str := strconv.Itoa(index)
+	//	data := map[string]LogVal{index_str: r.myLog[index]}
+	//	log_encoder.Encode(data)
+	log_m, _ := json.Marshal(r.myLog)
+	log_encoder.Encode(string(log_m))
 	fh_Log.Close()
 
 }
@@ -793,13 +795,13 @@ func (r *Raft) prepAppendEntriesReq() (appendEntriesReqArray [noOfServers]Append
 			//if len(r.myLog) != 0 { //removed since, in case of decrementing nextIndexes for log repair, log length is never zero but nextIndex becomes -1
 			if nextIndex >= 0 { //this is AE request with last entry sent (this will be considered as HB when log of follower is consistent)
 
-				term = r.myLog[nextIndex].term
-				entries = r.myLog[nextIndex].cmd //entry to be replicated
+				term = r.myLog[nextIndex].Term
+				entries = r.myLog[nextIndex].Cmd //entry to be replicated
 				prevLogIndex = nextIndex - 1     //should be changed to nextIndex-1
 				if nextIndex == 0 {
 					prevLogTerm = -1 //since indexing will be log[-1] so it must be set explicitly
 				} else {
-					prevLogTerm = r.myLog[prevLogIndex].term //this is the way to get new prevLogTerm to be sent
+					prevLogTerm = r.myLog[prevLogIndex].Term //this is the way to get new prevLogTerm to be sent
 				}
 
 			} else { //so this is prepReq for heartbeat for empty as nextIndex is -1
@@ -832,7 +834,7 @@ func (r *Raft) prepRequestVote() RequestVote {
 		lastLogTerm = r.currentTerm
 	} else {
 		//fmt.Println("In else of prepRV()")
-		lastLogTerm = r.myLog[lastLogIndex].term
+		lastLogTerm = r.myLog[lastLogIndex].Term
 	}
 	//fmt.Println("here2")
 	reqVoteObj := RequestVote{r.currentTerm, r.Myconfig.Id, lastLogIndex, lastLogTerm}
@@ -882,6 +884,7 @@ func (r *Raft) countVotes() (voteCount int) {
 	return
 }
 
+//For testing
 func (r *Raft) myId() string {
 	return "I am " + strconv.Itoa(r.Myconfig.Id)
 }

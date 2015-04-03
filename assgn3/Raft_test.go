@@ -214,8 +214,8 @@ func Test_LogRepair(t *testing.T) {
 func Test_CommitEntryFromPrevTerm(t *testing.T) {
 	//not able to simulate the scenario for now
 	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
-	//crash leader 2 for less than 7 msec, which is next viable leader's timeout i.e. S2
+	//crash leader 2 for less than 2 msec, which is next viable leader's timeout i.e. S1
 	//i.e. before its RetryTimer times out??
-	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers agan
+	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
 
 }
