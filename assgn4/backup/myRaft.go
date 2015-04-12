@@ -1,10 +1,12 @@
 package raft
 
 import (
+	"encoding/gob"
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	"math"
 	//"math/rand"
+	"net"
 	"os"
 	"strconv"
 	"sync"
@@ -38,14 +40,13 @@ func (l LogItem) Committed() bool {
 }
 
 type ServerConfig struct {
-	Id int // Id of server. Must be unique
-	//Hostname   string // name or ip of host
-	//ClientPort int    // port at which server listens to client messages.
-	//LogPort    int    // tcp port for inter-replica protocol messages.
+	Id         int    // Id of server. Must be unique
+	Hostname   string // name or ip of host
+	ClientPort int    // port at which server listens to client messages.
+	LogPort    int    // tcp port for inter-replica protocol messages.
 }
 
 type ClusterConfig struct {
-	Path    string         // Directory for persistent log
 	Servers []ServerConfig // All servers in this cluster
 }
 
@@ -90,7 +91,7 @@ type followerDetails struct {
 
 func (r *Raft) Append(data []byte) (LogEntry, error) {
 	obj := ClientAppendReq{data}
-	send(r.Myconfig.Id, obj) //ADD CRASH CONDITION for append--PENDING
+	r.send(r.Myconfig.Id, obj) //ADD CRASH CONDITION for append--PENDING
 	//fmt.Println("I am", r.Myconfig.Id, "In Append,data sent to channel of", r.Myconfig.Id)
 	response := <-r.commitCh
 	//fmt.Println("Response received on commit channel", response)
@@ -98,6 +99,9 @@ func (r *Raft) Append(data []byte) (LogEntry, error) {
 }
 
 type ErrRedirect int
+
+//==========Assign -4 ========
+var hostname string = "localhost"
 
 //==========================Addition for assgn3============
 //temp for testing
@@ -111,10 +115,11 @@ var globMutex = &sync.RWMutex{}
 //var LSNMutex = &sync.RWMutex{}
 
 //For converting default time unit of ns to millisecs
-var secs time.Duration = time.Millisecond
+//var secs time.Duration = time.Millisecond
+var secs time.Duration = time.Second //for testing
 
 const majority int = 3
-const noOfServers int = 5
+const noOfServers int = 2
 const (
 	ElectionTimeout      = iota
 	HeartbeatTimeout     = iota
@@ -126,12 +131,7 @@ const (
 //type LogDB []LogVal //log is array of type LogVal
 type LogVal struct {
 	Term int
-	Cmd  []byte //should it be logEntry type?, should not be as isCommited and lsn are useless to store in log
-	//they are needed only for kvStore processing i.e. logEntry must be passed to commitCh
-
-	//This is added for commiting entries from prev term--So when there are entries from prev term in leaders log but have not been replicated on mjority
-	//then there must be a flag which is checked before advancing the commitIndex, if false, commit(replicate on maj) them first!
-	//used only by leader
+	Cmd  []byte
 	Acks int
 }
 type LogMetadata struct {
@@ -139,14 +139,7 @@ type LogMetadata struct {
 	prevLogIndex int // value is lastLogIndex-1 always so not needed as such,---Change this later
 	prevLogTerm  int
 	commitIndex  int
-
-	//Volatile state for leader
-	//nextIndex must be maintained for every follower separately,
-	// so there must be a mapping from follower to server's nextIndex for it
-
-	// this dis nextIndex[server_id]=nextIndex--===========Shift this to follower object later==PENDING
-	nextIndexMap map[int]int //used during log repair,this is the entry which must be sent for replication
-	//matchIndex   int--NOT NEEDED AS OF NOW (Since no batch processing)
+	nextIndexMap map[int]int
 }
 type AppendEntriesReq struct {
 	term         int
@@ -173,10 +166,10 @@ type ClientAppendResponse struct {
 	ret_error error
 }
 type RequestVote struct {
-	term         int
-	candidateId  int
-	lastLogIndex int
-	lastLogTerm  int
+	Term         int
+	CandidateId  int
+	LastLogIndex int
+	LastLogTerm  int
 }
 type RequestVoteResponse struct {
 	term        int
@@ -184,38 +177,120 @@ type RequestVoteResponse struct {
 	id          int //added so that leader can keep track of votes from a server rather than voteCount
 }
 
-func send(serverId int, msg interface{}) { //type of msg? it can be Append,AppendEntries or RequestVote or the responses
-	//send to each servers event channel--How to get every1's channel?
-	//maintain a shared/global map which has serverid->raftObj mapping so every server can get others raftObj and its eventCh
-	raftObj := server_raft_map[serverId]
-	//fmt.Println("Before writing to channel of:", serverId)
-	raftObj.eventCh <- msg
-	//fmt.Println("After writing to channel of:", serverId)
+//===========Assgn-4==========
+//type Dummy struct {
+//	Var1 int
+//	Var2 string
+//}
+
+func (r *Raft) makeConnection(port int, msg interface{}) {
+	//service := hostname + ":" + strconv.Itoa(port) --Set hostname as global or pass
+	//CHECK IF CONNECTION IS ALREADY MADE!
+	//fmt.Println("In make connection", r.myId(), "for port", port)
+	service := hostname + ":" + strconv.Itoa(port)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
+	checkErr(err)
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil {
+		fmt.Println("Err in net.Resolve in makeConn is", err)
+		//checkErr(err)
+		return
+	} else {
+		//Encode(conn, msg)
+		//EncodeString(conn)--works
+		//EncodeInterface(conn, msg)
+		Sender(conn)
+	}
+}
+
+//dummy
+func Sender(conn net.Conn) {
+	fmt.Println("in sender, conn is:", conn)
+	enc_net := gob.NewEncoder(conn)
+	var obj_enc interface{}
+	obj_enc = RequestVote{0, 0, -1, -1}
+	fmt.Println("Object encoded is:", obj_enc)
+	err_enc := enc_net.Encode(&obj_enc)
+	if err_enc != nil {
+		fmt.Println("Err in encoding", err_enc)
+	}
+}
+
+//Dummy func for testing--works
+func EncodeString(conn net.Conn) {
+	conn.Write([]byte("Message from Encode"))
+	fmt.Println("String written to conn")
+}
+
+//Dummy to check struct over two processes
+func EncodeInterface(conn net.Conn, msg interface{}) {
+	//var msg interface{}
+	//msg = "This is msg from encode"
+	msg = RequestVote{0, 0, -1, -1}
+	enc := gob.NewEncoder(conn)
+	enc.Encode(&msg)
+	fmt.Printf("Encoded msg is %v of type %T\n", msg, msg)
+}
+
+func Encode(conn net.Conn, msg interface{}) {
+	fmt.Printf("Before encoding in gob,type is %T \n", msg)
+	enc := gob.NewEncoder(conn)
+	enc.Encode(&msg)
+	fmt.Printf("Encoded in gob,msg:%v \n", msg)
+}
+
+//changed to r.send to access port of serverId
+func (r *Raft) send(serverId int, msg interface{}) {
+	//==A-4=====
+	//Dial the connection to serverId's port-get the port using self raft's clustObj
+	//place the msg on the connection made
+
+	//fmt.Println("In send", r.myId())
+	port := r.ClusterConfigObj.Servers[serverId].LogPort //Confirm if Si config is in index i of clusterObj only!--PENDING
+	//fmt.Println("Connection being made to port:", port, r.myId())
+	//conn := r.makeConnection(port)
+	r.makeConnection(port, msg)
 }
 
 func (r *Raft) receive() interface{} {
+
+	/*==Assgn4==NO Since all servers must start listening as their raft objects are made and then SM must be launched
+	listen on self server port
+	make connection and use gob decoder to read from conn
+	Also listen parallely on self Client port
+	make connection and use gob decoder to read from conn
+	--dump the data read to self event channel
+	*/
+
 	//waits on eventCh
 	request := <-r.eventCh
+	fmt.Printf("In receiver(),read from eventCh,type: %T  %v\n", request, r.myId())
+
 	switch request.(type) { //if data on channel is RetryTimeout, then it should revert to follower, hence return the timeout object
 	case int:
 		request = request.(int)
 	}
 	if !(getServerToCrash() == r.Myconfig.Id && getCrash()) || request == RetryTimeOut {
+		fmt.Println("returning value read from channel", r.myId())
 		return request
 	} else {
+		fmt.Println("In receive(), returning nil", r.myId())
 		return nil
 	}
+
+	//return 0 //dummy
+	return request
 }
 
 func (r *Raft) sendToAll_AppendReq(msg []interface{}) {
 	//fmt.Println("Server-Raft map:", server_raft_map)
 	if !(r.Myconfig.Id == getServerToCrash() && getCrash()) {
 		//fmt.Println("I am", r.Myconfig.Id, "able to send")
-		for k := range server_raft_map {
+		for k := range r.ClusterConfigObj.Servers {
 			//fmt.Println("Id from map is:", k, r.Myconfig.Id)
 			if r.Myconfig.Id != k { //send to all except self
 				//fmt.Println("Sending HB to ", k)
-				go send(k, msg[k]) //removed keyword go
+				go r.send(k, msg[k]) //removed keyword go
 				//fmt.Println("After sending RPCS")
 
 			}
@@ -223,14 +298,14 @@ func (r *Raft) sendToAll_AppendReq(msg []interface{}) {
 	}
 }
 
-//This is different method because it sends same object to all followers,
-//In above method arg is an array so if that is used, RV obj will have to be replicated unnecessarily
 func (r *Raft) sendToAll(msg interface{}) {
-	//fmt.Println("Server-Raft map:", server_raft_map)
-	for k := range server_raft_map {
-		//fmt.Println("Id from map is:", k, r.Myconfig.Id)
+	//==Assgn4
+	//make connections with all and dump msg after encoding with gob to all conns
+
+	for k, _ := range r.ClusterConfigObj.Servers {
+		//fmt.Println("Id from map is:", k, r.myId())
 		if r.Myconfig.Id != k { //send to all except self
-			go send(k, msg) //removed go
+			go r.send(k, msg)
 			//fmt.Println("After sending RV")
 		}
 	}
@@ -242,24 +317,26 @@ func (r *Raft) follower(timeout int) int {
 	//myId := r.Myconfig.Id
 	//fmt.Println("In follower()", myId)
 	//start heartbeat timer,timeout func wil place HeartbeatTimeout on channel
-	waitTime := timeout //use random number after func is tested--PENDING
+	waitTime := timeout
 	HeartBeatTimer := r.StartTimer(HeartbeatTimeout, waitTime)
 
 	for {
 		req := r.receive()
+		fmt.Printf("in follower(), receive returned type of req is %T \n", req)
 		switch req.(type) {
 		case AppendEntriesReq:
+			fmt.Println("AE_Req came", r.myId())
 			request := req.(AppendEntriesReq) //explicit typecasting
 			r.serviceAppendEntriesReq(request, HeartBeatTimer, waitTime)
 		case RequestVote:
+			fmt.Println("Requestvote came", r.myId())
 			waitTime_secs := secs * time.Duration(waitTime)
 			request := req.(RequestVote)
-			//fmt.Println("Requestvote came to", myId, "from", request.candidateId)
 			HeartBeatTimer.Reset(waitTime_secs)
 			//fmt.Println("Timer reset to:", waitTime_secs)
 			r.serviceRequestVote(request)
 		case ClientAppendReq: //follower can't handle clients and redirects to leader, sends upto commitCh as well as clientCh
-			//fmt.Println("in client append")
+			fmt.Println("in client append", r.myId())
 			request := req.(ClientAppendReq) //explicit typecasting
 			response := ClientAppendResponse{}
 			logItem := LogItem{r.CurrentLogEntryCnt, false, request.data} //lsn is count started from 0
@@ -270,9 +347,11 @@ func (r *Raft) follower(timeout int) int {
 			//response.ret_error = e
 			//r.clientCh <- response //respond to client giving the leader Id--Should only be given leader id right?--CHECK
 		case int:
-			//fmt.Println("In follower timeout", r.Myconfig.Id, time.Now().Format(layout))
-			HeartBeatTimer.Stop() //turn off timer as now election timer will start in candidate() mode
+			fmt.Println("In follower timeout", r.myId())
+			HeartBeatTimer.Stop()
 			return candidate
+		default:
+			fmt.Println("In default case")
 		}
 	}
 }
@@ -280,20 +359,17 @@ func (r *Raft) follower(timeout int) int {
 //conducts election, returns only when state is changed else keeps looping on outer loop(i.e. restarting elections)
 func (r *Raft) candidate() int {
 	//myId := r.Myconfig.Id
-	//fmt.Println("Election started!I am", myId)
+	fmt.Println("Election started!", r.myId())
 
 	//reset the votes else it will reflect the votes received in last term
 	r.resetVotes()
-
-	//--start election timer for election-time out time, so when responses stop coming it must restart the election
-
 	waitTime := 10
 	//fmt.Println("ELection timeout is", waitTime)
 	ElectionTimer := r.StartTimer(ElectionTimeout, waitTime)
 	//This loop is for election process which keeps on going until a leader is elected
 	for {
 		r.currentTerm = r.currentTerm + 1 //increment current term
-		//fmt.Println("I am candidate", r.Myconfig.Id, "and current term is now:", r.currentTerm)
+		fmt.Println("I am candidate", r.Myconfig.Id, "and current term is now:", r.currentTerm)
 
 		r.votedFor = r.Myconfig.Id //vote for self
 		r.WriteCVToDisk()          //write Current term and votedFor to disk
@@ -301,15 +377,17 @@ func (r *Raft) candidate() int {
 
 		//fmt.Println("before calling prepRV")
 		reqVoteObj := r.prepRequestVote() //prepare request vote obj
-		//fmt.Println("after calling prepRV")
+		fmt.Println("after calling prepRV", r.myId(), "prepObj is:", reqVoteObj)
 		r.sendToAll(reqVoteObj) //send requests for vote to all servers
+		fmt.Println("Sent to all", r.myId())
 		//this loop for reading responses from all servers
 		for {
 			req := r.receive()
+			fmt.Println("receive func returned value:", req, r.myId())
 			switch req.(type) {
 			case RequestVoteResponse: //got the vote response
 				response := req.(RequestVoteResponse) //explicit typecasting so that fields of struct can be used
-				//fmt.Println("Got the vote", response.voteGranted)
+				fmt.Println("Got the vote", response.voteGranted)
 				if response.voteGranted {
 					//					temp := r.f_specific[response.id] //NOT ABLE TO DO THIS--WHY??--WORK THIS WAY
 					//					temp.vote = true
@@ -348,12 +426,12 @@ func (r *Raft) candidate() int {
 					if request.leaderLastLogIndex == r.myMetaData.lastLogIndex && request.term == myLastIndexTerm { //this is heartbeat from a valid leader
 						appEntriesResponse.success = true
 					}
-					send(request.leaderId, appEntriesResponse)
+					r.send(request.leaderId, appEntriesResponse)
 					return follower
 				} else {
 					//check if log is same
 					//fmt.Println("In candidate, AE_Req-else")
-					send(request.leaderId, appEntriesResponse)
+					r.send(request.leaderId, appEntriesResponse)
 				}
 			case int:
 				waitTime_secs := secs * time.Duration(waitTime)
@@ -368,7 +446,7 @@ func (r *Raft) candidate() int {
 
 //Keeps sending heartbeats until state changes to follower
 func (r *Raft) leader() int {
-	//fmt.Println("In leader(), I am: ", r.Myconfig.Id)
+	fmt.Println("In leader()", r.myId())
 
 	r.sendAppendEntriesRPC() //send Heartbeats
 	//waitTime := 4            //duration between two heartbeats
@@ -429,7 +507,7 @@ func (r *Raft) leader() int {
 			} else {
 				//reject the request sending false
 				reply := AppendEntriesResponse{r.currentTerm, false, r.Myconfig.Id, false, r.myMetaData.lastLogIndex}
-				send(request.leaderId, reply)
+				r.send(request.leaderId, reply)
 			}
 
 		case int: //Time out-time to send Heartbeats!
@@ -698,7 +776,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 
 	//fmt.Printf("Follower %v sent the AE_ack to %v \n", r.Myconfig.Id, request.leaderId)
 	//Where is it sending to leader's channel??--Added
-	send(request.leaderId, appEntriesResponse)
+	r.send(request.leaderId, appEntriesResponse)
 }
 
 //r is follower who received the request
@@ -706,13 +784,13 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 func (r *Raft) serviceRequestVote(request RequestVote) {
 	//fmt.Println("In service RV method of ", r.Myconfig.Id)
 	response := RequestVoteResponse{} //prep response object,for responding back to requester
-	candidateId := request.candidateId
+	candidateId := request.CandidateId
 	response.id = r.Myconfig.Id
 	//fmt.Println("Follower", r.Myconfig.Id, "log as complete?", r.logAsGoodAsMine(request))
 	if r.isDeservingCandidate(request) {
 		response.voteGranted = true
 		r.votedFor = candidateId
-		r.currentTerm = request.term
+		r.currentTerm = request.Term
 
 		//Writing current term and voteFor to disk
 		r.WriteCVToDisk()
@@ -727,7 +805,7 @@ func (r *Raft) serviceRequestVote(request RequestVote) {
 	//fmt.Println("VotedFor,request.lastLogTerm", r.votedFor, request.lastLogTerm)
 
 	//fmt.Printf("In serviceRV of %v, obj prep is %v \n", r.Myconfig.Id, response)
-	send(candidateId, response) //send to sender using send(sender,response)
+	r.send(candidateId, response) //send to sender using send(sender,response)
 }
 
 func (r *Raft) WriteCVToDisk() {
@@ -767,12 +845,12 @@ func (r *Raft) isDeservingCandidate(request RequestVote) bool {
 	//if candidate term is greater don't check votedFor as it will be the last term value and since term is greater it means it hasn't voted in this term
 	//If term is equal check votedFor
 	//in both cases ,log completion is checked mandatorily
-	return ((request.term > r.currentTerm && r.logAsGoodAsMine(request)) || (request.term == r.currentTerm && r.logAsGoodAsMine(request) && (r.votedFor == -1 || r.votedFor == request.candidateId)))
+	return ((request.Term > r.currentTerm && r.logAsGoodAsMine(request)) || (request.Term == r.currentTerm && r.logAsGoodAsMine(request) && (r.votedFor == -1 || r.votedFor == request.CandidateId)))
 }
 
 func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
 	//fmt.Println("Follower", r.Myconfig.Id, "Granting vote as", (request.lastLogTerm > r.currentTerm || (request.lastLogTerm == r.currentTerm && request.lastLogIndex >= r.myMetaData.lastLogIndex)))
-	return (request.lastLogTerm > r.currentTerm || (request.lastLogTerm == r.currentTerm && request.lastLogIndex >= r.myMetaData.lastLogIndex))
+	return (request.LastLogTerm > r.currentTerm || (request.LastLogTerm == r.currentTerm && request.LastLogIndex >= r.myMetaData.lastLogIndex))
 
 }
 
@@ -830,7 +908,7 @@ func (r *Raft) prepRequestVote() RequestVote {
 	if len(r.myLog) == 0 {
 		//fmt.Println("In if of prepRV()")
 		lastLogTerm = -1 //Just for now--Modify later
-		//lastLogTerm = r.currentTerm
+		//lastLogTerm = r.currentTerm //HOW??-A4 shouldnt it be -1?
 	} else {
 		//fmt.Println("In else of prepRV()")
 		lastLogTerm = r.myLog[lastLogIndex].Term
@@ -852,7 +930,11 @@ func (r *Raft) StartTimer(timeoutObj int, waitTime int) (timerObj *time.Timer) {
 
 //Places timeOutObject on the eventCh of the caller
 func (r *Raft) TimeOut(timeoutObj int) {
-	r.eventCh <- timeoutObj
+	//added for testing so only election starts, and then no timeout to check gob exchange
+	if timeoutObj == HeartbeatTimeout && r.Myconfig.Id == 1 {
+		r.eventCh <- timeoutObj
+	}
+	//fmt.Println("Timed out", timeoutObj)
 }
 
 func (r *Raft) setNextIndex_All() {
@@ -889,6 +971,7 @@ func (r *Raft) Client(myChan chan LogEntry, data string) {
 	logItem, err := r.Append([]byte(data))
 	if err != nil {
 		//redirect to leader???--ASK!
+		fmt.Println("Error in Append call")
 	} else {
 		myChan <- logItem
 	}
