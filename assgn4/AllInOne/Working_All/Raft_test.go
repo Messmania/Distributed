@@ -3,7 +3,7 @@ package raft
 
 import (
 	//"log"
-	//	"strings"
+	"strings"
 	//"runtime/debug"
 	"fmt"
 	"math/rand"
@@ -62,7 +62,6 @@ func Test_StartServers(t *testing.T) {
 	//This makes server 1 leader
 }
 
-/*
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	//fmt.Println("Testing single client append to leader")
@@ -152,8 +151,6 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 
 }
 
-
-
 //PASSED
 func Test_ClientAppendToFollowers(t *testing.T) {
 	const n int = 4
@@ -195,7 +192,6 @@ func Test_ServerCrash_(t *testing.T) {
 	time.Sleep(w)
 
 }
-
 
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
@@ -409,8 +405,6 @@ func TestMRSC(t *testing.T) {
 
 }
 
-
-
 func Test_CommitEntryFromPrevTerm(t *testing.T) {
 	//not able to simulate the scenario for now
 	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
@@ -419,7 +413,6 @@ func Test_CommitEntryFromPrevTerm(t *testing.T) {
 	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
 
 }
-
 
 func TestMRMC(t *testing.T) {
 	port = 9002
@@ -466,4 +459,3 @@ func TestMRMC(t *testing.T) {
 	}
 
 }
-*/

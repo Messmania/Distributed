@@ -84,15 +84,6 @@ func checkErr(err error) {
 	}
 } */
 
-func registerTypes() {
-	gob.Register(AppendEntriesReq{})
-	gob.Register(AppendEntriesResponse{})
-	gob.Register(RequestVote{})
-	gob.Register(RequestVoteResponse{})
-	gob.Register(ClientAppendReq{})
-	gob.Register(ClientAppendResponse{})
-}
-
 //For decoding the values
 func DecodeInterface_Client(conn net.Conn) (interface{}, error) {
 
@@ -100,7 +91,7 @@ func DecodeInterface_Client(conn net.Conn) (interface{}, error) {
 	var obj_dec interface{}
 	err_dec := dec_net.Decode(&obj_dec)
 	if err_dec != nil {
-		checkErr("In DecodeInterface, err is:", err_dec)
+		checkErr("In DecodeInterface of client, err is:", err_dec)
 		return nil, err_dec
 
 	}
@@ -108,10 +99,10 @@ func DecodeInterface_Client(conn net.Conn) (interface{}, error) {
 }
 
 func EncodeInterface_Client(conn net.Conn, msg interface{}) {
-	registerTypes()
+	//	registerTypes()
 	enc_net := gob.NewEncoder(conn)
 	err_enc := enc_net.Encode(&msg)
 	if err_enc != nil {
-		checkErr("Error in EncodeInterface", err_enc)
+		checkErr("Error in EncodeInterface of client", err_enc)
 	}
 }

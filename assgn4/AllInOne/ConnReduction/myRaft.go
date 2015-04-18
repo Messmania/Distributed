@@ -227,7 +227,7 @@ func (r *Raft) EncodeInterface(conn net.Conn, msg interface{}) {
 	err_enc := enc_net.Encode(msgPtr)
 	if err_enc != nil {
 		//msg := r.myId() + ", Error in EncodeInterface"
-		msg := "Error in EncodeInterface"
+		msg := "Error in EncodeInterface of raft" + r.myId()
 		checkErr(msg, err_enc)
 	}
 }

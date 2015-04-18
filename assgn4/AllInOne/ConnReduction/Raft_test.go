@@ -184,7 +184,6 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
 }
 
-/*
 func Test_ServerCrash_(t *testing.T) {
 	setCrash(true)
 	setServerToCrash(1)

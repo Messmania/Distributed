@@ -1,19 +1,31 @@
 //Raft_test
+//package clientCh
+
 package raft
 
 import (
-	//"log"
+	"./clientCH"
+	//"fmt"
 	"strings"
-	//"runtime/debug"
-	"fmt"
-	//	"math/rand"
+	//"math/rand"
+	//"raft"
 	"testing"
 	"time"
 )
 
 //var r0, r1, r2, r3, r4 *Raft
-//var hostname string = "localhost"
+var hostname string = "localhost"
 var port int = 9001
+var msecs time.Duration = time.Millisecond * 10
+
+//With 5 servers
+func Test_StartServers(t *testing.T) {
+
+	//reset global variables
+	//setCrash(false)
+	//setServerToCrash(-1)
+
+}
 
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
@@ -22,18 +34,26 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := "OK"
 	myChan := make(chan string)
-	//go Client(myChan, set1, "set1", hostname, port)
-	go Client(myChan, set1, hostname, port)
+	go clientCH.Client(myChan, set1, hostname, port)
 	//fmt.Println("Launched client, Waiting for response in Test method")
 	response := <-myChan
 	RLine := strings.Split(response, "\r\n")
-	if RLine[1] != "" && RLine[0] != expected {
-		t.Error("Mismatch!", response, expected)
+	//fmt.Println("response", response, "Rline is:", RLine[1], RLine[0])
+	R1 := strings.Fields(RLine[0])
+	if R1[0] != expected {
+		t.Error("Mismatch!", R1[0], expected)
 	}
+
 	//fmt.Println("Test SingleCA_Leader finished")
-	time.Sleep(time.Millisecond * 100)
+	//time.Sleep(time.Millisecond * 1000)
+	//time.Sleep(time.Second * 5)
+
+	//w := msecs * time.Duration(10)
+	w := msecs * time.Duration(1) //for secs
+	time.Sleep(w)
 }
 
+/*
 //PASSED
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	const n int = 4
@@ -46,7 +66,9 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 
 	cmd := []string{set2, getm1, getm2, del1}
 	//cd := []string{"set2", "getm1", "getm2", "del1"}
-	E := []string{"OK", "VALUE 20 8\r\nabcdefjg", "VALUE 30 5\r\nefghi", "ERRNOTFOUND", "DELETED"}
+
+	//not checking remaining time field in response , since testing sleeps changes the time, this func is checked in TestCheck&Expire
+	E := []string{"OK", "VALUE 8\r\nabcdefjg", "VALUE 5\r\nefghi", "ERRNOTFOUND", "DELETED"}
 
 	chann := make([]chan string, n)
 	//fmt.Println("Testing MultipleCA to leader")
@@ -66,12 +88,12 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 		matched := 0
 		RLine := strings.Split(R, "\r\n")
 		R1 := strings.Fields(RLine[0])
-		if RLine[1] == "" {
-			//for response: OK <ver>\r\n
+		if RLine[1] == "" { //means 1 line response
+			//for response: OK <ver>\r\n, or ERRNOTFOUND,DELETED
 			Result = R1[0]
-		} else {
-			//For response: VALUE <ver> <exp> <numbytes>\r\n<dataBytes>\r\n
-			Result = R1[0] + " " + R1[2] + " " + R1[3] + "\r\n" + RLine[1]
+		} else { //two line response
+			//For response: VALUE <ver> <exp> numbytes\r\n<dataBytes>\r\n
+			Result = R1[0] + " " + R1[3] + "\r\n" + RLine[1]
 		}
 		//Checking from the list of expected responses
 		for i := 0; i < nResponses; i++ {
@@ -88,7 +110,11 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 
 	//fmt.Println("Test MCA_leader completed")
 
-	time.Sleep(time.Second * 1)
+	//time.Sleep(time.Second * 1)
+	//time.Sleep(time.Second * 2)
+
+	w := msecs * time.Duration(10)
+	time.Sleep(w)
 
 }
 
@@ -114,21 +140,31 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 			t.Error("Mismatch! Expected and received values are:", E, response)
 		}
 	}
-	time.Sleep(time.Second * 1) //s that entries are appended to all, before server1 crashes
+	//time.Sleep(time.Second * 1) //s that entries are appended to all, before server1 crashes
+	//time.Sleep(time.Second * 5) //s that entries are appended to all, before server1 crashes
+	w := msecs * time.Duration(10)
+	time.Sleep(w)
 }
 
 func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
 }
 
+/*
 func Test_ServerCrash_(t *testing.T) {
 	setCrash(true)
 	setServerToCrash(1)
 	fmt.Println("\n=========Server 1 crashed now!============\n")
-	time.Sleep(time.Second * 2) //giving time to elect a new leader
+	w := msecs * time.Duration(100)
+	//time.Sleep(time.Second * 2) //giving time to elect a new leader
+	time.Sleep(w)
 
+	//	setServerToCrash(2) //3 becomes leader now
+	//	w = msecs * time.Duration(100)
+	//	time.Sleep(w)
 }
 
+/*
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
 func Test_LeaderChanges(t *testing.T) {
@@ -155,12 +191,12 @@ func Test_LogRepair(t *testing.T) {
 	const n int = 4
 	const nResponses int = 3
 	port = 9002
-	set1 := "set abc 20 8\r\nabcdefjg\r\n"
+	set1 := "set mno 20 8\r\nabcdefjg\r\n"
 	set3 := "set efg 3 8\r\nabcdefjg\r\n"
 	set4 := "set ooo 6 7\r\nmonikas\r\n"
-	getm3 := "getm abc\r\n"
+	getm3 := "getm mno\r\n"
 
-	E := []string{"OK", "VALUE 20 8\r\nabcdefjg", "ERRNOTFOUND"}
+	E := []string{"OK", "VALUE 8\r\nabcdefjg", "ERRNOTFOUND"}
 	cmd := []string{set1, set3, set4, getm3}
 	chann := make([]chan string, n)
 	for k := 0; k < n; k++ {
@@ -181,7 +217,7 @@ func Test_LogRepair(t *testing.T) {
 			Result = R1[0]
 		} else { //for two line response
 			//For response: VALUE <ver> <exp> <numbytes>\r\n<dataBytes>\r\n
-			Result = R1[0] + " " + R1[2] + " " + R1[3] + "\r\n" + RLine[1]
+			Result = R1[0] + " " + R1[3] + "\r\n" + RLine[1]
 		}
 		//Checking from the list of expected responses
 		for i := 0; i < nResponses; i++ {
@@ -199,22 +235,15 @@ func Test_LogRepair(t *testing.T) {
 	setServerToCrash(-1)
 	fmt.Println("Log repair starts!")
 	//now Server1's log gets repaired when it starts receiving Heartbeats during this time period--HOW TO TEST?--by checking the log
-	time.Sleep(time.Second * 2)
-}
-
-func Test_CommitEntryFromPrevTerm(t *testing.T) {
-	//not able to simulate the scenario for now
-	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
-	//crash leader 2 for less than 2 msec, which is next viable leader's timeout i.e. S1
-	//i.e. before its RetryTimer times out??
-	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
-
+	w := msecs * time.Duration(10)
+	time.Sleep(w)
 }
 
 //Testing kvstore-- appends to leader
 
 func TestErrors(t *testing.T) {
 	const n int = 10
+	port = 9002
 	//=============For ERRNOTFOUND==========
 	get1 := "get ms\r\n"
 	getm1 := "getm ms\r\n"
@@ -251,7 +280,7 @@ func TestErrors(t *testing.T) {
 	for i := 0; i < n; i++ {
 		go Client(chann[i], cmd[i], hostname, port)
 		//Sleep is added so that all errors can be tested explicitly
-		time.Sleep(time.Millisecond * 10)
+		time.Sleep(time.Millisecond * 100)
 	}
 
 	var R [n]string
@@ -320,9 +349,8 @@ func TestCheckAndExpire(t *testing.T) {
 
 }
 
-/*
-//NOT WORKING FOR NOW, since for this for loop must be there in handleClient, which is causing other probs-See notes
 func TestMRSC(t *testing.T) {
+	port = 9002
 	chann := make(chan string)
 	const n int = 4
 	cmd1 := "set abc 10 5\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
@@ -348,6 +376,59 @@ func TestMRSC(t *testing.T) {
 
 }
 
-/*
-func TestMRMC(t *testing.T) {}
+func Test_CommitEntryFromPrevTerm(t *testing.T) {
+	//not able to simulate the scenario for now
+	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
+	//crash leader 2 for less than 2 msec, which is next viable leader's timeout i.e. S1
+	//i.e. before its RetryTimer times out??
+	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
+
+}
+
+//Causing jam in the test sometimes--Check
+func TestMRMC(t *testing.T) {
+	port = 9002
+	const n int = 4  //No. of cmds per client
+	const nC int = 2 //No.of clients
+	cmd1 := "set abc 10 5\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
+	cmd2 := "set bcd 2 2\r\nmn\r\ngetm bcd\r\ndelete bcd\r\ngetm bcd\r\n"
+	E := []string{"OK", "VALUE 10 5\r\ndata1", "VALUE 2 2\r\nmn", "DELETED", "ERRNOTFOUND"}
+	cmd := []string{cmd1, cmd2}
+	//Declare and initialize channels
+	chann := make([]chan string, n)
+	for k := 0; k < nC; k++ {
+		chann[k] = make(chan string)
+	}
+	// Launch clients
+	for j := 0; j < nC; j++ {
+		go Client(chann[j], cmd[j], hostname, port)
+	}
+	for j := 0; j < nC; j++ {
+		for k := 0; k < n; k++ {
+			R := <-chann[j]
+			Result := ""
+			matched := 0
+			RLine := strings.Split(R, "\r\n")
+			R1 := strings.Fields(RLine[0])
+			if RLine[1] == "" {
+				//for set,err,deleted response: OK <ver>\r\n
+				Result = R1[0]
+			} else if len(RLine) == 3 {
+				//For getm response: VALUE <ver> <exp> <numbytes>\r\n<dataBytes>\r\n
+				Result = R1[0] + " " + R1[2] + " " + R1[3] + "\r\n" + RLine[1]
+			}
+			//Checking from the list of expected responses
+			for i := 0; i < 5; i++ {
+				if Result == E[i] {
+					matched = 1
+				}
+			}
+			//Every response must match one of the responses in array E
+			if matched != 1 {
+				t.Error("Received values are:\r\n", Result)
+			}
+		}
+	}
+
+}
 */

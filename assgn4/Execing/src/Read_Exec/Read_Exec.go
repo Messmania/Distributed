@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	//"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"raft"
@@ -82,6 +83,14 @@ func main() {
 	if len(args) > 1 {
 		filename = args[1]
 	}
+	//for waits
+	w0 := rand.Intn(13)
+	w1 := rand.Intn(5)
+	w2 := rand.Intn(10)
+	w3 := rand.Intn(10)
+	w4 := rand.Intn(22)
+	w := []int{w0, w1, w2, w3, w4}
+
 	v = readJson(filename)
 
 	i := len(v.Servers)

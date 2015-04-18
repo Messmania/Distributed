@@ -1,0 +1,204 @@
+A-3 CHANGES===========
+changed lastLogTerm = -1 in prepReqVote, no idea why it was =r.currentTerm, and -1 line was commented.
+
+
+
+==ASSIGN - 4:=========
+1. assign ports to all
+    Client port: S0-S4: 9000-9004
+    Server port: S0-S4: 8000-8004
+2. use conn to listen to servers 
+2. send: make connection to the destn port, dump data on conn using gob encoder
+3. receive: listen to self port, get data from gob decoder and dump it to self eventCh
+
+Flow:
+ServerStart
+-makes raft obj by calling NewRaft
+-uses that raft to start listening to servers,clients and then fires ServerSM
+
+
+TO CHECK:==========
+1. How to check if a connection already exists?--PENDING, works without it for now
+pseudocode:
+    if !portConnection.Exists(){
+        conn := makeConnection()
+        return conn
+    }
+    
+    Or rather than trying to make connection agn n agn, just make it once when servers start.
+    
+Flow:
+S1 sends voteReq by making connection with all
+Now S0 gets the vote on its port and processes it. Now it should send on the same conn the request came on. It shouldnt
+try to dial S1 again as connection is still there. But how does S0 know about it?
+Ideally listenToServers must pass conn handle method which after processing writes to same conn.
+BUT prob is servers are listening to their eventCh only. They process whatever comes on it and sends it back to destination by making another connection with it.
+One way: After sending  i.e. writing to channel, close the connection,Only receiver should close the conn, not sender!
+
+--Gob is changing the type of msg?? It is going in default case! Check !--IT IS RETURNING string--check tomrw--use interface{}--SOLVED
+
+Problem: Connection between 2 followers
+Problem 2:
+Not able to decode a string!! A normal interface value! Func DecodeInterface prints nil--Works, Encode(&msg) not Encode(msg)--
+Problem3: Decoding a struct, Doesnt work even if explicit types are provided on both sides, (two follower processes)
+using EncodeInterface to send RV obj and DecodeInterface to receive it over conn, with explicit types--Doesnot work
+
+
+Problem4 :
+How does client send command to a particular server? via port numbers
+How to get raftObj of that server? so as to call Append of that server---map of ClientPort-RaftObj? this gets initialised when servers are started--NO NEED
+because listenToClients, handleClient are called via raft object only
+
+Problem5:
+Redirection by followers! What should be the point of redirection?--DONE
+
+Problem6:--PENDING
+when firing send for AE_Req in go, testcases sometimes get stuck on waiting on some channel (haven't checked) but without
+go it passes all the time.--Not getting now-SOLVED
+
+PROBLEM7: For loop in handleClient is causing problems! Test cases get stuck in leaderchanges--SOLVED
+
+PROBLEM8:--PENDING
+In logrepairnextIndex = response.LastLogIndex + 1  doesn't work many a times
+//changed on 12 march--failing for some cases --CHECK, doesn't work with for loop in handleClient
+
+TO DO TOmorrow(11-March)
+1. Launch servers in a separate process- main pkg which must have raft imported, so raft pkg must be installed, so 
+put all the raft codes in a folder raft and install it. then use it in this file.
+2. Separate clientCH as done in assgn2, and separate testfile too
+5. TestMRMC
+
+7. Exec! Ask how to pass timeout?
+8. Put CV in a struct in json format, write to file is not clear
+9. =================++Make server binaries(5)-============
+launch server in 5 diff terminals.
+in 6th terminal , do telnet and send the command, and check if desired response is coming.
+ctrl+c the leader to check leader changes.
+
+10. To test commit from prev term.
+pass election timeout while execing- i.e. ServerStart will have additional arg as eTimeOut. which will be inputted to candidate.
+so when 
+
+6. Control conn launched:
+- each server maintains conn for every server
+--map[Me]-["s0":conn,"s1":conn..etc]
+- so whenever a serverX dials a serverY, X puts that conn in its raft. So X will have this conn everytime it wants to send to Y.
+-Now Y must also store the receiveConn in its map, but how does it know the port of X? i.e. listener.Accept must also store the conn.
+
+
+7. Advised by sir-kill an exec-ed process from testmethod, using os.cmd.ProcessId smthng
+
+===DONE==
+3. 
+Since now follower is sending its lastindex also in AEresponse, so logrepair can set the nextIndex as followers
+lastindex + 1 rather than decrementing nextIndexMap value 1 by 1.
+Ex if Leader has LI as 10 , n follower1 has 2, then unecessarily, it will decrement from 10 to 2 in steps of 1.
+So better decrement NI in map to (LI_f + 1), i.e. 3 since follower doesn't have 3-10 index entries
+Overwriting will be done if the entries present are also wrong. so no prob in this too.
+This is failing when handleClient for loop is uncommented.--CHECKING IS REMAINING,
+"For loop" in handleClient is commented for now so MRMC ,MRSC is not handled. CHECK!, due to this leader is not receiving the responses and 
+timing out on RetryTimeOut and becoming follower and starts log repair of all. after getting elected again as leader.
+--DONE--SOLVED: Prob was new leader wasnot sending last log entry in HBs due to unintialised nextIndexMap
+when new leader is elected, his nextIndexMap is not initialised so call setNextIndex after becoming leader
+prev it was called only in AppendToLog_Leader()
+
+
+4. Make EncodeInterface and DecodeInterface return err too.--DONE
+
+
+Changes: (Stupid mistakes)
+-f_obj in NewRaft was initialised above for loop, it should be inside, because it is the pointer, so if outside
+all f_specifi[i] will point to same object.
+-resetVotes in election loop.
+
+
+Trying conn separation========
+For testing: eTimeOut increased to 30s
+--According to sir's sugestion-- put a for loop in the method which gets called after l.Accept, i.e. writeToEvChan'
+
+
+
+==TRYING LAUNCHING Servers in separate process===
+Steps:
+-make a folder raft, with all files except client n test, install it
+-make a folder clientCH with client file, install it
+-make a folder server, which has Main.go to start servers, build to make binary
+-keep test file in a directory containing these 3 folders
+	--testfile code is in "pkg raft"
+- then do go test
+PROB:-Testmethod can't use any raft members! so not able to crash
+
+-Exec must be done
+
+
+EXEC Procedure explained:==ASK==
+-Read_Exec, it is used for execing a binary
+	-readJson: reads the data from json file, and arranges it in a ClusterConfig object and returns a ClustObj
+	-then main func calls this method and gets the clust obj. Now it spreads it out in a string called vstr also finds thisServerId
+		execs a binary(serverStarter) which takes these two fields as inputs.
+	-since all servers are to be launched identically, it execs in a loop.
+	-to include timeOut, prepare an array of waits and do
+	exec.Command("serverStarter",v,thisServerId,w[i])
+-serverStarter
+	-this main pkg is what calls the method reqd to start the servers i.e. StartServer.
+	-so now as we know above Read_Exec , spawns it and gives string as first input. but ServerStart needs clustObj, so it again
+		compacts the recvd arg i.e. arg[1] into clustObj and calls the ServerStart giving the received args (after processing the first arg)
+REDUNDANCY: no need to spread clustObj into string while execing. Therefore , serverStarter can directly pass the rcvd arg[1] to ServerStart
+as done with thisServerId
+OR may be, you can pass only strings while execing. ?? since thisServerId is also converted to string--TO BE checked
+
+
+16-04-2015
+1.
+-===LOGIC BUG!!===
+In logAsGoodAsMine, request's lastLogTerm was being compared with self currentTerm, but it should be compared with lastLogTerm because in case
+elections happened and no CA came, then r.currentTerm will increment and become different than lastLogTerm.
+prev code was :
+
+func (r *Raft) logAsGoodAsMine(request RequestVote) bool {	
+	return (request.LastLogTerm > r.CurrentTerm || (request.LastLogTerm == r.CurrentTerm && request.LastLogIndex >= r.MyMetaData.LastLogIndex))
+	
+}
+new Code is:
+
+func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
+	var myLastLogTerm, myLastLogIndex int
+	myLastLogIndex = r.MyMetaData.LastLogIndex
+	if len(r.MyLog) == 0 {
+		myLastLogTerm = -1
+	} else {
+		myLastLogTerm = r.MyLog[myLastLogIndex].Term
+	}	
+	return (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex))
+}
+
+2. Connections are 2 per server, because, receiver doesn't know which sender has connected to it, so map has no details when a server is 
+a receiver (writeToEvChan method),--FOR Now
+TO BE DONE: in send(), if 1st time, send id first.
+		in writeToEvChan, decode the id first and set the self map, outside for loop.
+		
+3. Re-added Path member in ClusterConfig for ease of use of exec file,
+but it is taking prev install of raft from assgn4/Pkg??--Reinstall raft pkg in Exec/pkg
+
+
+To ask:
+1. kvstore shud modify conn? if not hw will it close the conn if an error, by sending sm return value?
+2. Exec-readJson to be moved to testmethod?
+3. Creating folder in golang? for disk files
+4. Sig kill confirm? exec.Command ? 
+	-a := exec.Command("xx")
+	a.Process.Kill ? or Pid?
+5. 
+
+
+
+===TO DO ========
+1. Make conn to use write and read in handleClient and Client methods, since it uses only strings! also it will be able to display results
+on terminal(hopefully gob was the cause for that)
+
+2. LOGIC BUG: Leader must also receive RequestVote, in case a follower crashes(not partitions) and comes back up as foll->candidate and sends
+RV to all, now leader must respond false and that candidate will revert to follower
+This is not needed cz when follower comes up, it immed gets the HB.. above was happening bcz conn was stale. Now leader tries to make conn
+with foll(if conn is stale, i.e. Encode fails) every HB
+3. Error in index out of range in acks = &r.MyLog[lastindex].ack ?? 
+4. Append only new entry to file not the entire db!
