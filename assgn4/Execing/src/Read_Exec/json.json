@@ -1,0 +1,37 @@
+{
+	"Path": "null",
+	"ServerConfig": [ 
+	{
+		"Id": "0",
+		"Hostname": "localhost",
+		"ClientPort": "9000",
+		"LogPort": "8000"
+	},
+
+	{
+		"Id": "1",
+		"Hostname": "localhost",
+		"ClientPort": "9001",
+		"LogPort": "8001"
+	},
+
+	{
+		"Id": "2",
+		"Hostname": "localhost",
+		"ClientPort": "9002",
+		"LogPort": "8002"
+	},
+	{
+		"Id": "3",
+		"Hostname": "localhost",
+		"ClientPort": "9003",
+		"LogPort": "8003"
+	},
+	{
+		"Id": "4",
+		"Hostname": "localhost",
+		"ClientPort": "9004",
+		"LogPort": "8004"
+	}
+	]
+}

@@ -1,14 +1,17 @@
 package raft
 
+//package main
+
 import (
 	//"fmt"
 	"log"
 	"os"
 	"strconv"
+	//"time"
 )
 
 //Global map for serverid->raftObj mapping
-var server_raft_map = make(map[int]*Raft)
+//var server_raft_map = make(map[int]*Raft)
 
 const (
 	follower  = iota
@@ -16,19 +19,17 @@ const (
 	candidate = iota
 )
 
-//===============================================+++NEW CODE+++============================================
+//===============================================++A-3:NEW CODE+++============================================
 
-func ServerStart(cluster *ClusterConfig, thisServerId int) *Raft {
+func ServerStart(cluster *ClusterConfig, thisServerId int, timeout int) {
 	commitCh := make(chan *LogEntry, 4)
 	raftObj, err := NewRaft(cluster, thisServerId, commitCh)
+	//fmt.Println("Raft obj:", raftObj)
 	if err != nil {
-		checkErr(err)
-		//return
-		return raftObj //TO BE CHANGED
+		checkErr("Error in ServerStart(),NewRaft call", err)
+		return ///os.exit? since server failed to initialize??
 	} else {
-		//fmt.Println("In else of Serverstart()")
-		//go raftObj.ServerSM(timeout) //fire all the servers
-		return raftObj
+		raftObj.connHandler(timeout)
 	}
 }
 
@@ -38,8 +39,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	var nextIndexMap = make(map[int]int)
 	var f_details = make(map[int]*followerDetails)
 
-	//var fh_log, fh_cv *os.File
-	//var err1, err2 error
 	var pathString_Log, pathString_CV string
 	//Intialising the ServerConfig struct for itself assuming id is already set in ServerConfig struct
 	servArr := (*cluster).Servers
@@ -47,14 +46,20 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 		if i == 0 {
 			//read leader details into raftObj
 			leaderObj.Id = servArr[i].Id
+			leaderObj.Hostname = servArr[i].Hostname
+			leaderObj.ClientPort = servArr[i].ClientPort
+			leaderObj.LogPort = servArr[i].LogPort
 		}
 
 		if server.Id == thisServerId {
 			//read leader details into raftObj
 			myObj.Id = thisServerId
+			myObj.Hostname = servArr[i].Hostname
+			myObj.ClientPort = servArr[i].ClientPort
+			myObj.LogPort = servArr[i].LogPort
 		}
 		nextIndexMap[i] = -1 //initialising nextIndexes for all in each server
-		f_obj := followerDetails{false}
+		f_obj := followerDetails{false, nil}
 		f_details[i] = &f_obj
 	}
 
@@ -65,21 +70,13 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 
 	myLog := make([]LogVal, 0, 10)
 
-	metaData := LogMetadata{-1, -2, -2, -1, nextIndexMap} //MODIFY raftObj init
-	//how to make directories???--for now --path must exist for file to be created in that path
+	metaData := LogMetaData{-1, -2, -2, -1, nextIndexMap}
 
 	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log}
 
-	server_raft_map[myObj.Id] = raftObj //mapping server id to its raft object
+	//server_raft_map[myObj.Id] = raftObj //NOT NEEDED NOW--REMOVE
 
 	return raftObj, err
-}
-
-func checkErr(err error) {
-	if err != nil {
-		log.Println("Error encountered in server.go:", err)
-
-	}
 }
 
 //=====================++New Code++=========================
@@ -88,9 +85,6 @@ func checkErr(err error) {
 func (r *Raft) ServerSM(timeout int) {
 	state := follower //how to define type for this?--const
 	for {
-		//		if r.Myconfig.Id == 1 {
-		//			fmt.Println("In ServerSM, I am 1 and state!", state)
-		//		}
 		switch state {
 		case follower:
 			//fmt.Println("in case follower")
@@ -103,6 +97,7 @@ func (r *Raft) ServerSM(timeout int) {
 			state = r.leader()
 		default:
 			return
+
 		}
 	}
 }
@@ -132,4 +127,9 @@ func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log str
 	//fmt.Print("Paths are:", pathString_CV, pathString_Log)
 	return pathString_CV, pathString_Log
 
+}
+
+//=================For launching server in a separate process===
+func main() {
+	//	fmt.Println("In main")
 }

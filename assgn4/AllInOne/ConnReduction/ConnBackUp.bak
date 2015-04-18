@@ -1,0 +1,82 @@
+
+/*
+func (r *Raft) updateSenderConn(conn net.Conn) {
+	//msg, err := r.DecodeInterface(conn)
+	if err != nil {
+		checkErr("Error in updateConnMap", err)
+	}
+	senderId := msg.(int)
+	r.setSenderConn(senderId, conn)
+	fmt.Println("Connection made with", senderId, "Updated ServerConnMap", r.myId())
+}
+*/
+
+/*
+func (r *Raft) updateReceiverConn(conn net.Conn) {
+	msg, err := r.DecodeInterface(conn)
+	if err != nil {
+		checkErr("Error in updateConnMap", err)
+	}
+	senderId := msg.(int)
+	r.setReceiverConn(senderId, conn)
+	fmt.Println("Connection made with", senderId, "Updated ServerConnMap", r.myId())
+}
+
+//Keeps waiting to decode from conn of the given server
+func (r *Raft) writeToEvCh(serverId int) {
+	//fmt.Println(r.myId(), "In WriteToEvCh going to loop on conn of", serverId)
+	registerTypes()
+	for {
+		//conn := r.f_specific[serverId].conn
+		conn := r.getReceiverConn(serverId)
+		if conn != nil {
+			fmt.Println(r.myId(), "In receiver, Conn became non-nil for ", serverId)
+			msg, err := r.DecodeInterface(conn)
+			if err != nil {
+				//fmt.Println(r.myId(), "Error in decoding!!!")
+				checkErr("Error in writeToEvCh(),DecodeInterface", err)
+				return //added on 13th 5: am while modifying checkErr signature
+			}
+			fmt.Println(r.myId(), "about to write the msg from", serverId, "to evCh")
+			r.EventCh <- msg
+			fmt.Println(r.myId(), "Wrote msg to self evCh for", serverId, msg)
+		} else {
+			//fmt.Println(r.myId(), "conn is still nil")
+		}
+	}
+
+}
+*/
+
+/*
+func (r *Raft) setReceiverConn(serverId int, conn net.Conn) {
+	fmt.Println(r.myId(), "Setting serverConnMap for", serverId)
+	r.f_specificMutex.Lock()
+	r.f_specific[serverId].rConn = conn
+	r.f_specificMutex.Unlock()
+}
+*/
+
+
+/*
+func (r *Raft) getReceiverConn(serverId int) net.Conn {
+	r.f_specificMutex.RLock()
+	conn := r.f_specific[serverId].rConn
+	r.f_specificMutex.RUnlock()
+	return conn
+
+}
+*/
+
+//Decodes the msgs from connected conns reading the map and writes it to eventCh
+/*
+func (r *Raft) DecodeConns() {
+	for i := 0; i < noOfServers; i++ {
+		if !(i == r.Myconfig.Id) {
+			//fmt.Println("Write to EVch launched! for", i)
+			go r.writeToEvCh(i)
+		}
+	}
+	//fmt.Println("Exiting DecodeConns")
+}
+*/

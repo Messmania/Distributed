@@ -1,0 +1,57 @@
+Prepared cluster obj
+Waits are 10 2 7 9 13
+In follower() I am 2
+In follower() I am 1
+In follower() I am 3
+In follower() I am 0
+In follower() I am 4
+Election started! I am 1
+In send I am 1 sending to: 0
+Connection being made to port: 8000 I am 1
+I am 1 Making connection for Connection being made to port: 8003 I am 1
+I am 1 Making connection for the first time to 3
+In send I am 1 sending to: 2
+Connection being made to port: 8002 I am 1
+I am 1 Making connection for the first time to 2
+In send I am 1 sending to: 4
+Connection being made to port: 8004 I am 1
+I am 1 Making connection for the first time to 4
+Calling Encode to send my id I am 1
+Calling Encode to send my id I am 1
+Calling Encode to send my id I am 1
+Calling Encode to send my id I am 1
+In update conn map I am 0 updated map is &{false 0xc20806a0b8} 1
+In update conn map I am 4 updated map is &{false 0xc20809c008} 1
+In update conn map I am 3 updated map is &{false 0xc2080e6028} 1
+Election started! I am 2
+In send I am 2 sending to: 0
+Connection being made to port: 8000 I am 2
+I am 2 Making connection for the first time to 0
+In send I am 2 sending to: 1
+Connection being made to port: 8001 I am 2
+Calling Encode to send my id I am 2
+In send I am 2 sending to: 3
+Connection being made to port: 8003 I am 2
+I am 2 Making connection for the first time to 3
+In update conn map I am 0 updated map is &{false 0xc2080e6088} 2
+In send I am 2 sending to: 4
+Connection being made to port: 8004 I am 2
+I am 2 Making connection for the first time to 4
+Calling Encode to send my id I am 2
+Calling Encode to send my id I am 2
+In update conn map I am 3 updated map is &{false 0xc2080e60c8} 2
+In update conn map I am 4 updated map is &{false 0xc20809c060} 2
+RequestVote came I am 3
+RequestVote came I am 4
+In send I am 4 sending to: 2
+Connection being made to port: 8002 I am 4
+In send I am 0 sending to: 2
+Connection being made to port: 8002 I am 0
+I am 3
+I am 4
+I am 0
+In send I am 3 sending to: 2
+Connection being made to port: 8002 I am 3
+I am 2
+PASS
+ok  	github.com/Messmania/Repositories/Distributed/assgn4/AllInOne	10.010s
