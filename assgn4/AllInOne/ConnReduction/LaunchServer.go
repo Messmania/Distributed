@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	//"time"
-	"sync"
+	//	"sync"
 )
 
 //Global map for serverid->raftObj mapping
@@ -72,9 +72,9 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	myLog := make([]LogVal, 0, 10)
 
 	metaData := LogMetaData{-1, -2, -2, -1, nextIndexMap}
-	f_specificMutex := &sync.RWMutex{}
-	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log, f_specificMutex}
-
+	//f_specificMutex := &sync.RWMutex{}
+	//raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log, f_specificMutex}
+	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log}
 	//server_raft_map[myObj.Id] = raftObj //NOT NEEDED NOW--REMOVE
 
 	return raftObj, err

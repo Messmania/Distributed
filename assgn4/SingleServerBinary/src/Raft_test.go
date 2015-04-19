@@ -29,8 +29,6 @@ func Test_StartServers(t *testing.T) {
 
 }
 
-/*
-
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	fmt.Println("Testing single client append to leader")
@@ -57,6 +55,7 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	time.Sleep(w)
 }
 
+/*
 //PASSED
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	const n int = 4
@@ -154,23 +153,8 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
 }
-
-/*
-func Test_ServerCrash_(t *testing.T) {
-	setCrash(true)
-	setServerToCrash(1)
-	fmt.Println("\n=========Server 1 crashed now!============\n")
-	w := msecs * time.Duration(100)
-	//time.Sleep(time.Second * 2) //giving time to elect a new leader
-	time.Sleep(w)
-
-	//	setServerToCrash(2) //3 becomes leader now
-	//	w = msecs * time.Duration(100)
-	//	time.Sleep(w)
-}
 */
 
-/*
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
 func Test_LeaderChanges(t *testing.T) {
@@ -389,6 +373,7 @@ func TestCheckAndExpire(t *testing.T) {
 }
 */
 
+/*
 func TestMRSC(t *testing.T) {
 	fmt.Println("TestMRSC started")
 	port = 9002
@@ -426,7 +411,7 @@ func Test_CommitEntryFromPrevTerm(t *testing.T) {
 	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
 
 }
-*/
+
 
 //Causing jam in the test sometimes--Check
 func TestMRMC(t *testing.T) {
@@ -474,3 +459,5 @@ func TestMRMC(t *testing.T) {
 	}
 
 }
+
+*/

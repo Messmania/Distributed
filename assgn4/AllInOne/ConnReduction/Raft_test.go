@@ -197,7 +197,6 @@ func Test_ServerCrash_(t *testing.T) {
 	//	time.Sleep(w)
 }
 
-/*
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
 func Test_LeaderChanges(t *testing.T) {
@@ -464,4 +463,3 @@ func TestMRMC(t *testing.T) {
 	}
 
 }
-*/

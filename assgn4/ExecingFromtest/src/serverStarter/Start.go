@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	///"fmt"
 	"io/ioutil"
 	"os"
 	"raft"
@@ -86,7 +85,6 @@ func main() {
 	Id, _ := strconv.Atoi(args[2])
 	eTimeout, _ := strconv.Atoi(args[4])
 	fTimeout, _ := strconv.Atoi(args[3])
-
 	raft.ServerStart(&v, Id, fTimeout, eTimeout)
 	wait := make(chan int)
 	<-wait

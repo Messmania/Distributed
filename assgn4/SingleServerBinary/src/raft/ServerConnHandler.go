@@ -163,3 +163,39 @@ func (r *Raft) handleClient(conn net.Conn) {
 		}
 	}
 }
+
+/*
+
+//to convert client reads and write to conn Read and write rather than gob, so telnet can be used
+func (r *Raft) handleClient(conn net.Conn) {
+	for {
+		var msg [512]byte
+		n, err := conn.Read(msg[0:])
+		fmt.Println("In handleClient,msg read is:", string(cmd))
+		if err == nil {
+			cmd := msg
+			logEntry, err := r.Append(cmd[0:n])
+			//write the logEntry:conn to map
+			connMapMutex.Lock()
+			connLog[&logEntry] = conn
+			connMapMutex.Unlock()
+
+			if err == nil {
+				go r.kvStoreProcessing(&logEntry)
+
+			} else {
+				//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
+				ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
+				errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
+				_, err1 := conn.Write([]byte(errRedirectStr))
+				if err1 != nil {
+					checkErr("Error in writing redirect string to conn", err1)
+				}
+			}
+		} else { //===CHECK THIS
+			//			fmt.Println("Exiting handleClient since conn is closed")
+			break
+		}
+	}
+}
+*/

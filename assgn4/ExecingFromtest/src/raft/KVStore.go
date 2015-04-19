@@ -2,8 +2,6 @@ package raft
 
 import (
 	//"fmt"
-	//	"log"
-	//	"math"
 	"math/rand"
 	"net"
 	"strconv"
@@ -46,7 +44,9 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	connMapMutex.RUnlock()
 	//separate cmd from logEntry
 	request := string((*logEntry).Data())
+	//	fmt.Println("In kv,request rcvd is:", request)
 	str := strings.Split(request, "\r\n")
+	//	fmt.Println("str after spliting is:", str, "len of fst arg is:", len(str[0]))
 	//Server response and value field from command
 	sr := ""
 	key := ""
@@ -55,22 +55,30 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	value := ""
 	//cmd contains individual fields of command
 	cmd := strings.Fields(str[0])
+	//	fmt.Println("cmd is:", cmd)
 	l = len(cmd)
-	if l > 0 {
+	if l > 1 {
 		op = strings.ToLower(cmd[0])
 		value = str[1]
 		key = cmd[1]
+		//fmt.Println("key extracted is:", key)
 	} else {
-		return
+		op = ""
 	}
+
+	//	fmt.Println("Before case,key is:", key)
 	switch op {
 	case "set":
 		if l == 4 {
 			numBStr := cmd[3]
 			expStr := cmd[2]
 			numb, err1 := strconv.ParseInt(numBStr, 0, 64)
-			checkErr("Error in kvStoreProc,strconv.ParseInt(numBStr, 0, 64)", err1)
-			sr = setFields(expStr, numb, value, key, l, op)
+			if err1 != nil {
+				checkErr("Error in kvStoreProc,strconv.ParseInt(numBStr, 0, 64), in set", err1)
+				sr = "ERRINTERNAL\r\n"
+			} else {
+				sr = setFields(expStr, numb, value, key, l, op)
+			}
 		} else {
 			sr = "ERR_CMD_ERR\r\n"
 		}
@@ -91,11 +99,15 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 				numBStr := cmd[4]
 				expStr := cmd[3]
 				numb, err1 := strconv.ParseInt(numBStr, 0, 64)
-				checkErr("Error in cas", err1)
-				if newVersion == oldVersion {
-					sr = setFields(expStr, numb, value, key, l, op)
+				if err1 != nil {
+					checkErr("Error in kvStoreProc,strconv.ParseInt(numBStr, 0, 64), in cas", err1)
+					sr = "ERRINTERNAL\r\n"
 				} else {
-					sr = "ERR_VERSION\r\n"
+					if newVersion == oldVersion {
+						sr = setFields(expStr, numb, value, key, l, op)
+					} else {
+						sr = "ERR_VERSION\r\n"
+					}
 				}
 			} else {
 				globMutex.RUnlock()
@@ -107,14 +119,19 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	case "delete":
 		sr = deleteRecord(key)
 	default:
-		sr = "ERRINTERNAL\r\n"
+		sr = "ERR_CMD_ERR\r\n"
 	}
 
-	r.EncodeInterface(conn, sr)
+	//	fmt.Println("In kvstore, writing", sr, "to conn")
+	_, err := conn.Write([]byte(sr))
+	if err != nil {
+		checkErr("Error in encoding msg: kvStoreProcessing", err)
+	}
 
 }
 
 func setFields(expStr string, numb int64, value string, key string, l int, op string) (sr string) {
+	//	fmt.Println("in setfields, key is:", key)
 	//Timer handling
 	var oldTimer *time.Timer
 	globMutex.RLock()
@@ -126,7 +143,11 @@ func setFields(expStr string, numb int64, value string, key string, l int, op st
 	timer := oldTimer
 	//Conversion from string to apt data type
 	exp, err := strconv.ParseInt(expStr, 0, 64)
-	checkErr("Error in setFields", err)
+	if err != nil {
+		checkErr("Error in kvStoreProc,strconv.ParseInt(numBStr, 0, 64), in setFields", err)
+		sr = "ERRINTERNAL\r\n"
+		return
+	}
 
 	ver := int64(rand.Intn(10000))
 
@@ -158,9 +179,14 @@ func setFields(expStr string, numb int64, value string, key string, l int, op st
 }
 
 func getFields(key string, l int, op string) (sr string) {
+	//	fmt.Println("in get fields,Key is:", key)
 	if l == 2 {
 		globMutex.RLock()
 		d, exist := db[key]
+		//Testing
+
+		//		fmt.Println("db data is:", d)
+		//====
 		if exist != false {
 			d.recordMutex.Lock()
 			globMutex.RUnlock()

@@ -1,8 +1,6 @@
 package clientCH
 
 import (
-	//"fmt"
-	"encoding/gob"
 	"log"
 	"net"
 	"strconv"
@@ -18,22 +16,21 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 		checkErr("Error in Client(),DailTCP", err)
 		return
 	} else {
-		//fmt.Println("Conn dialed at client side,conn:", conn)
 		cmd := SeparateCmds(strEcho)
-		//		fmt.Println("cmd separated is:", cmd)
 		for i := 0; i < len(cmd); i++ {
-			msg := cmd[i]
-			EncodeInterface_Client(conn, msg)
-			fmt.Println("Encoding done, in Client connH", msg)
-			rep, err := DecodeInterface_Client(conn)
+			_, err := conn.Write([]byte(cmd[i]))
 			if err != nil {
-				log.Println("Error in Client(),", err)
+				checkErr("In Client(),Error in conn.Write", err)
 				return
 			}
-			//			fmt.Println("Decoding done, in Client connH", rep)
-			reply := rep.(string)
 
-			fmt.Println("In client, reply is", reply)
+			var rep [512]byte
+			n, err1 := conn.Read(rep[0:])
+			if err1 != nil {
+				checkErr("In Client(),Error in Reading from conn", err1)
+				return
+			}
+			reply := string(rep[0:n])
 			ch <- reply
 		}
 	}
@@ -78,28 +75,5 @@ func checkErr(msg string, err error) {
 	if err != nil {
 		log.Println(msg, err)
 
-	}
-}
-
-//For decoding the values
-func DecodeInterface_Client(conn net.Conn) (interface{}, error) {
-
-	dec_net := gob.NewDecoder(conn)
-	var obj_dec interface{}
-	err_dec := dec_net.Decode(&obj_dec)
-	if err_dec != nil {
-		checkErr("In DecodeInterface of client, err is:", err_dec)
-		return nil, err_dec
-
-	}
-	return obj_dec, nil
-}
-
-func EncodeInterface_Client(conn net.Conn, msg interface{}) {
-	//	registerTypes()
-	enc_net := gob.NewEncoder(conn)
-	err_enc := enc_net.Encode(&msg)
-	if err_enc != nil {
-		checkErr("Error in EncodeInterface of client", err_enc)
 	}
 }

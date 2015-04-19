@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
+	//	"sync"
 	"time"
 )
 
@@ -80,7 +80,7 @@ type Raft struct {
 	Path_CV  string
 	Path_Log string
 
-	f_specificMutex *sync.RWMutex
+	//f_specificMutex *sync.RWMutex
 }
 
 //used by leader to track details specific to a follower
@@ -127,9 +127,9 @@ var server_to_crash int
 //var LSNMutex = &sync.RWMutex{}
 
 //For converting default time unit of ns to millisecs
-var msecs time.Duration = time.Millisecond * 10 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
+//var msecs time.Duration = time.Millisecond * 10 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
 
-//var msecs time.Duration = time.Second //for testing
+var msecs time.Duration = time.Second //for testing
 
 //const majority int = 3
 
@@ -218,7 +218,7 @@ func (r *Raft) makeConnection(port int, msg interface{}) net.Conn {
 }
 
 //Encodes the msg into gob
-func (r *Raft) EncodeInterface(conn net.Conn, msg interface{}) {
+func (r *Raft) EncodeInterface(conn net.Conn, msg interface{}) int {
 	r.registerTypes()
 	//	fmt.Println(r.myId(), "in EncodeI/f, msg to be encoded is:", msg)
 	enc_net := gob.NewEncoder(conn)
@@ -226,10 +226,12 @@ func (r *Raft) EncodeInterface(conn net.Conn, msg interface{}) {
 	msgPtr := &msg
 	err_enc := enc_net.Encode(msgPtr)
 	if err_enc != nil {
-		//msg := r.myId() + ", Error in EncodeInterface"
-		msg := "Error in EncodeInterface of raft" + r.myId()
+		msg := r.myId() + ", Error in EncodeInterface"
+		fmt.Println("Error in Encode of raft", err_enc)
 		checkErr(msg, err_enc)
+		return -1
 	}
+	return 0
 }
 
 //changed to r.send to access port of serverId
@@ -254,29 +256,35 @@ func (r *Raft) send(serverId int, msg interface{}) {
 			if conn == nil {
 				//				fmt.Println(r.myId(), "In send, Making connection for the first time to", serverId)
 				conn = r.makeConnection(port, msg)
-				r.setSenderConn(serverId, conn)
-				//				fmt.Println("Calling Encode to send my id to ", serverId, r.myId())
-				//r.EncodeInterface(conn, r.Myconfig.Id) //send self id first after making the connection!
+				if conn == nil {
+					return
+				} else {
+					r.setSenderConn(serverId, conn)
+				}
 			} else { //for testing
 				//				fmt.Println("Conn found in map", r.myId(), "for", serverId)
 			}
-			//			fmt.Println(r.myId(), "Encoding RV for ", serverId)
-			r.EncodeInterface(conn, msg)
+			err := r.EncodeInterface(conn, msg)
+			if err != 0 {
+				//means conn has been closed by server or it crashed, set the conn map as nil for this so that it will
+				//be retried to make Conn in next HB
+				r.setSenderConn(serverId, nil)
+			}
 		}
 	}
 }
 
 func (r *Raft) setSenderConn(serverId int, conn net.Conn) {
 	//	fmt.Println(r.myId(), "Setting serverConnMap for", serverId)
-	r.f_specificMutex.Lock()
+	//r.f_specificMutex.Lock()
 	r.f_specific[serverId].sConn = conn
-	r.f_specificMutex.Unlock()
+	//r.f_specificMutex.Unlock()
 }
 
 func (r *Raft) getSenderConn(serverId int) net.Conn {
-	r.f_specificMutex.RLock()
+	//r.f_specificMutex.RLock()
 	conn := r.f_specific[serverId].sConn
-	r.f_specificMutex.RUnlock()
+	//r.f_specificMutex.RUnlock()
 	return conn
 
 }

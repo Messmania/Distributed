@@ -239,3 +239,72 @@ ide in a separate program it doesn't :/
 2. Created CreateLogs for testing, but go routines are not writing
 3. FInd some way to write to files for all servers
 4. Servers not getting launched for last 5min,--
+
+ 
+====SUnday(19 april)==Working in SingleServerbinary with conn read change===
+1. Candidate must handle RequestVote too!
+2. detected a bug, when no log data, when majority are not up, then candidate keeps restarting the election, then one more
+server comes up(which now mks majorit), this either gets the RV while in follower(this shud happen but its nt,bcz of election timeout 
+being large?), or enters candidate mode(this happening), now it will get the RV but it doesn't respond false, since
+When more than 1 are in candidate mode, it gets stuck for every1
+---Retry the same RV continuously till majority responses are rcvd, if election timer fires, 
+then retry the election procedure with new term--==============FIXED with ResendVoteTimer
+
+3. acks bug caught!!!- follower is responding correctly by setting isHB true, but by chance follower enters candidate mode, and
+accepts other as leader but doesn't set isHB true!--===========FIXED
+	-also, if new server comes up with no log, then it sends false with lastLogIndex as -1, in which case ack statemnt fails!
+	so if last index is -1, logrepair must be started immediately, no need to check ack.
+	Why is HBTimer reset bfr logrepair call after ack if?--removed for nw
+4. How is this case handled? say follower1 and leader0, log empty, term 0, bcz of some reason follower times out and becomes candidate
+now he has term 1, but leader has 0.what shud happen is s1 now becomes leader and s0 becomes follower since no log, all are potential leaders
+in case log is there, if log length is same for both, above case,
+if new candidate has shorter log but higher term(due to election), -===asked sir
+
+5. When a server crashes, then it must maintain its prev log and read it when it comes back up!! :O how to do that?? Right now it starts afresh 
+and log repair is happening correctly
+So in create disk files, when files already exist then read and update the data!!--PENDING
+6. Shared serviceAE_Req code in follower and candidate--done
+7. PROBLEM:= it keeps repairing log for 3 n 4 when S1 was leader, appended entries and crashed. Now S2 is leader
+and dunno why it starts repairing log of 3 and 4 with failed and NI as 0
+8. When first CA comes to leader, it starts repairing log dnt know why--shouldn't be a problem since leader appends to self log are
+fast and till follower gets 1st request , leader LI might have jumped to greater than 1. and test cases are passing so!==FIXED
+9. BUG:
+	in prepAEReq,Term was being set as log's last term, but it should always be r.currentTerm bcz, leader might be new, and had no 
+	entries in log corresponding to that term.
+10, BUG: leader always sends its prevLog entry's term and index, but in this line of serviceAE_Req
+	if request.LeaderLastLogIndex == myLastIndex && request.Term == myLastIndexTerm {
+		it is matching requests term which is leader's currentTerm not last log term (as changed in BUG 9)
+		hence leader must send lastLogTerm too
+	due to this also change the term of the entry followers append to log, i.e. in AppendToLog_Follower
+	change Term = req.term to req.lastlogterm
+	Also due to this, assign LastLogTerm in prepAEReq accordingly, when entries are nil then it is -1 else it is that entry's term.
+
+
+
+11. ====CRITICAL=====
+Situation is, when lot of appends are going on,, like 30 40 requests, then say, S0 is leader and has entries 40
+S1,S2 are at 20
+S3, S4 at 35, but now , if any of S3 or S4 times out(temp partition), they will get votes from each other and S1 S2 and become leader.
+CommitIndex must be of some use here!
+
+12. Check and expire is not passing, going out of index.--Commented for now
+13. When more than 1 candidate, then nobody is winning, all get stuck in candidate state!
+	
+==Changes made==
+1. Removed decode encode handleClient method (was commented)
+2. Fixed bug 7,9,10
+3. changed break -> return in handleClient else block
+
+
+Status:
+1. ALl tests pass except MRMC after leader changes --PASSED NOW
+2. Use state var in serviceRV, (for now it is not used--too tired to test agn!)--No need, it was for testing, but can be used
+
+
+COnfusions:
+1. In serviceAE_Response, if lastLogIndex is -1 whether to call logrepair or just set NI to 0
+2. in serviceAE_Req, if entries are nil, what else to check?
+	can there be a case, when leader is nil, but follower has entries=---NO! Only one with lengthier log becms leader.
+	so say S1 had good long log and is leader. S2 S3 are consistent followers.
+	now if S0 starts, it can never be leader. till any of the one above is up.
+3. Case mailed to sir.

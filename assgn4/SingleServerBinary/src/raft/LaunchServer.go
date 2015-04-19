@@ -105,28 +105,31 @@ func (r *Raft) ServerSM(f int, e int) {
 
 func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log string) {
 	folderString := "./DiskLog/S" + strconv.Itoa(thisServerId)
-	err := os.MkdirAll(folderString, 0777)
-	if err != nil {
-		checkErr("Error in creating directory DiskLog", err)
-		panic(err)
-	}
-
 	pathString_CV = folderString + "/CV.log"
 	pathString_Log = folderString + "/Log.log"
-	fhcv, err1 := os.Create(pathString_CV)
-	if err1 != nil {
-		checkErr("Error in creating file CV.log", err)
-		panic(err1)
-	} else {
-		fhcv.Close()
-	}
+	_, err := os.Stat(folderString)
+	if err == nil {
+		err := os.MkdirAll(folderString, 0777)
+		if err != nil {
+			checkErr("Error in creating directory DiskLog", err)
+			panic(err)
+		}
 
-	fhlog, err2 := os.Create(pathString_Log)
-	if err2 != nil {
-		checkErr("Error in creating file Log.log", err)
-		panic((err2))
-	} else {
-		fhlog.Close()
+		fhcv, err1 := os.Create(pathString_CV)
+		if err1 != nil {
+			checkErr("Error in creating file CV.log", err)
+			panic(err1)
+		} else {
+			fhcv.Close()
+		}
+
+		fhlog, err2 := os.Create(pathString_Log)
+		if err2 != nil {
+			checkErr("Error in creating file Log.log", err)
+			panic((err2))
+		} else {
+			fhlog.Close()
+		}
 	}
 	return pathString_CV, pathString_Log
 
