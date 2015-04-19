@@ -124,7 +124,7 @@ Steps:
 -make a folder clientCH with client file, install it
 -make a folder server, which has Main.go to start servers, build to make binary
 -keep test file in a directory containing these 3 folders
-	--testfile code is in "pkg raft"
+    --testfile code is in "pkg raft"
 - then do go test
 PROB:-Testmethod can't use any raft members! so not able to crash
 
@@ -133,16 +133,16 @@ PROB:-Testmethod can't use any raft members! so not able to crash
 
 EXEC Procedure explained:==ASK==
 -Read_Exec, it is used for execing a binary
-	-readJson: reads the data from json file, and arranges it in a ClusterConfig object and returns a ClustObj
-	-then main func calls this method and gets the clust obj. Now it spreads it out in a string called vstr also finds thisServerId
-		execs a binary(serverStarter) which takes these two fields as inputs.
-	-since all servers are to be launched identically, it execs in a loop.
-	-to include timeOut, prepare an array of waits and do
-	exec.Command("serverStarter",v,thisServerId,w[i])
+    -readJson: reads the data from json file, and arranges it in a ClusterConfig object and returns a ClustObj
+    -then main func calls this method and gets the clust obj. Now it spreads it out in a string called vstr also finds thisServerId
+        execs a binary(serverStarter) which takes these two fields as inputs.
+    -since all servers are to be launched identically, it execs in a loop.
+    -to include timeOut, prepare an array of waits and do
+    exec.Command("serverStarter",v,thisServerId,w[i])
 -serverStarter
-	-this main pkg is what calls the method reqd to start the servers i.e. StartServer.
-	-so now as we know above Read_Exec , spawns it and gives string as first input. but ServerStart needs clustObj, so it again
-		compacts the recvd arg i.e. arg[1] into clustObj and calls the ServerStart giving the received args (after processing the first arg)
+    -this main pkg is what calls the method reqd to start the servers i.e. StartServer.
+    -so now as we know above Read_Exec , spawns it and gives string as first input. but ServerStart needs clustObj, so it again
+        compacts the recvd arg i.e. arg[1] into clustObj and calls the ServerStart giving the received args (after processing the first arg)
 REDUNDANCY: no need to spread clustObj into string while execing. Therefore , serverStarter can directly pass the rcvd arg[1] to ServerStart
 as done with thisServerId
 OR may be, you can pass only strings while execing. ?? since thisServerId is also converted to string--TO BE checked
@@ -155,28 +155,28 @@ In logAsGoodAsMine, request's lastLogTerm was being compared with self currentTe
 elections happened and no CA came, then r.currentTerm will increment and become different than lastLogTerm.
 prev code was :
 
-func (r *Raft) logAsGoodAsMine(request RequestVote) bool {	
-	return (request.LastLogTerm > r.CurrentTerm || (request.LastLogTerm == r.CurrentTerm && request.LastLogIndex >= r.MyMetaData.LastLogIndex))
-	
+func (r *Raft) logAsGoodAsMine(request RequestVote) bool {  
+    return (request.LastLogTerm > r.CurrentTerm || (request.LastLogTerm == r.CurrentTerm && request.LastLogIndex >= r.MyMetaData.LastLogIndex))
+    
 }
 new Code is:
 
 func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
-	var myLastLogTerm, myLastLogIndex int
-	myLastLogIndex = r.MyMetaData.LastLogIndex
-	if len(r.MyLog) == 0 {
-		myLastLogTerm = -1
-	} else {
-		myLastLogTerm = r.MyLog[myLastLogIndex].Term
-	}	
-	return (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex))
+    var myLastLogTerm, myLastLogIndex int
+    myLastLogIndex = r.MyMetaData.LastLogIndex
+    if len(r.MyLog) == 0 {
+        myLastLogTerm = -1
+    } else {
+        myLastLogTerm = r.MyLog[myLastLogIndex].Term
+    }   
+    return (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex))
 }
 
 2. Connections are 2 per server, because, receiver doesn't know which sender has connected to it, so map has no details when a server is 
 a receiver (writeToEvChan method),--FOR Now
 TO BE DONE: in send(), if 1st time, send id first.
-		in writeToEvChan, decode the id first and set the self map, outside for loop.
-		
+        in writeToEvChan, decode the id first and set the self map, outside for loop.
+        
 3. Re-added Path member in ClusterConfig for ease of use of exec file,
 but it is taking prev install of raft from assgn4/Pkg??--Reinstall raft pkg in Exec/pkg
 
@@ -186,8 +186,8 @@ To ask:
 2. Exec-readJson to be moved to testmethod?
 3. Creating folder in golang? for disk files
 4. Sig kill confirm? exec.Command ? 
-	-a := exec.Command("xx")
-	a.Process.Kill ? or Pid?
+    -a := exec.Command("xx")
+    a.Process.Kill ? or Pid?
 5. 
 
 
@@ -202,3 +202,40 @@ This is not needed cz when follower comes up, it immed gets the HB.. above was h
 with foll(if conn is stale, i.e. Encode fails) every HB
 3. Error in index out of range in acks = &r.MyLog[lastindex].ack ?? 
 4. Append only new entry to file not the entire db!
+
+
+
+
+
+===========++Checking++ Telnet in SingleServerBinary_Changing conn=====
+
+CHanges:
+0: --Changing conn of handleClient and Client to read and write works for telnet
+1. in leader, AE_Response:
+if responseCount >= majority-1 { //excluding self
+    in advanceCI, serviceAE,leader
+2. In kvStoreprocessing
+    --1
+    if l > 1 {
+        op = strings.ToLower(cmd[0])
+        value = str[1]
+        key = cmd[1]
+    } else {
+        op = ""
+    }
+    --2
+     default:
+        //sr = "ERRINTERNAL\r\n"
+        sr = "ERR_CMD_ERR\r\n"
+    }
+
+3. weird things happening! get abc\r\n splits on \r\n as get and abc\r\n  when checked in KvStore printlns but when checked in 
+ide in a separate program it doesn't :/
+\r\n is coming in string when string is adjacent to like set abc X\r\n => set,abc,X\r\n
+
+
+===In execFromTest
+1. Moved ServerSM to ServerConnHandler file
+2. Created CreateLogs for testing, but go routines are not writing
+3. FInd some way to write to files for all servers
+4. Servers not getting launched for last 5min,--
