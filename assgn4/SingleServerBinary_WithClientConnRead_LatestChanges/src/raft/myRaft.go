@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	//	"io"
 	"math"
 	"net"
 	"os"
@@ -394,11 +393,11 @@ func (r *Raft) candidate(timeout int) int {
 				response.Id = r.Myconfig.Id
 				if r.isDeservingCandidate(request) {
 					response.VoteGranted = true
-					//r.VotedFor = candidateId
-					//r.CurrentTerm = request.Term
 					r.myCV.VotedFor = candidateId
 					r.myCV.CurrentTerm = request.Term
-					r.WriteCVToDisk()
+					if request.Term > r.myCV.CurrentTerm { //write to disk only when value has changed
+						r.WriteCVToDisk()
+					}
 					ResendVoteTimer.Stop()
 					ElectionTimer.Stop()
 					fmt.Println("Voting true for", request.CandidateId, "Becoming follower from candidate", r.myId())
@@ -696,9 +695,12 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 	myLastIndex = r.MyMetaData.LastLogIndex
 	if request.Term >= r.myCV.CurrentTerm { //valid leader
 		leaderId := request.LeaderId
-		r.UpdateLeaderInfo(leaderId)      //update leader info
-		r.myCV.CurrentTerm = request.Term //update self Term
-		r.myCV.VotedFor = -1              //update votedfor whenever CT is changed
+		r.UpdateLeaderInfo(leaderId) //update leader info
+		if request.Term > r.myCV.CurrentTerm {
+			r.myCV.CurrentTerm = request.Term //update self Term
+			r.myCV.VotedFor = -1              //update votedfor whenever CT is changed
+			r.WriteCVToDisk()
+		}
 		if state == follower {
 			HeartBeatTimer.Reset(waitTime_msecs) //reset the timer if this is HB or AE req from valid leader
 		}
@@ -719,8 +721,6 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 			}
 			//}
 		} else { //log has Data so-- for heartbeat, check the index and Term of last entry
-			fmt.Println("In serviceAEReq, else of entries==nil", r.myId())
-			//if request.LeaderLastLogIndex == myLastIndex && request.Term == myLastIndexTerm {
 			if request.LeaderLastLogIndex == myLastIndex && request.LeaderLastLogTerm == myLastIndexTerm {
 				//this is heartbeat as last entry is already present in self log
 				appEntriesResponse.Success = true
@@ -774,7 +774,9 @@ func (r *Raft) serviceRequestVote(request RequestVote, state int) {
 		}
 		response.VoteGranted = false
 	}
-	r.WriteCVToDisk()
+	if request.Term > r.myCV.CurrentTerm {
+		r.WriteCVToDisk()
+	}
 	response.Term = r.myCV.CurrentTerm
 	r.send(candidateId, response) //send to sender using send(sender,response)
 }
@@ -825,6 +827,7 @@ func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
 
 func (r *Raft) resetVotes() {
 	for i := 0; i < noOfServers; i++ {
+		fmt.Println("follower details are:", r.f_specific)
 		r.f_specific[i].Vote = false
 	}
 }

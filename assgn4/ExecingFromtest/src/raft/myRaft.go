@@ -120,9 +120,9 @@ var hostname string = "localhost"
 const layout = "3:04:5 pm (MST)"
 
 //For converting default time unit of ns to millisecs
-//var msecs time.Duration = time.Millisecond * 10 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
+var msecs time.Duration = time.Millisecond * 100 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
 
-var msecs time.Duration = time.Second //for testing
+//var msecs time.Duration = time.Second //for testing
 
 //const majority int = 3
 

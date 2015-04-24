@@ -80,7 +80,7 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	const n int = 4
 	const nResponses int = 5
-
+	port = 9001
 	set2 := "set bcd 30 5\r\nefghi\r\n"
 	getm1 := "getm abc\r\n"
 	getm2 := "getm bcd\r\n"

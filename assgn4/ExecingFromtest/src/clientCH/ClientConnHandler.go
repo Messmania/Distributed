@@ -1,6 +1,8 @@
 package clientCH
 
 import (
+	//"encoding/gob"
+	//"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -17,7 +19,6 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
 		checkErr("Error in Client(),DailTCP", err)
-		ch <- "Error"
 		return
 	} else {
 		cmd := SeparateCmds(strEcho)
@@ -27,12 +28,10 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 				checkErr("In Client(),Error in conn.Write", err)
 				return
 			}
-
 			var rep [512]byte
 			n, err1 := conn.Read(rep[0:])
 			if err1 != nil {
 				checkErr("In Client(),Error in Reading from conn", err1)
-				return
 			}
 			reply := string(rep[0:n])
 			ch <- reply
@@ -78,6 +77,5 @@ func SeparateCmds(str string) (cmd []string) {
 func checkErr(msg string, err error) {
 	if err != nil {
 		log.Println(msg, err)
-
 	}
 }
