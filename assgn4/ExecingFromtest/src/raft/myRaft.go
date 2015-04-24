@@ -120,9 +120,9 @@ var hostname string = "localhost"
 const layout = "3:04:5 pm (MST)"
 
 //For converting default time unit of ns to millisecs
-var msecs time.Duration = time.Millisecond * 10 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
+//var msecs time.Duration = time.Millisecond * 10 ///increased to x10, with conn only MilliSecond might be too small, hence failing--changed to x100
 
-//var msecs time.Duration = time.Second //for testing
+var msecs time.Duration = time.Second //for testing
 
 //const majority int = 3
 
@@ -342,11 +342,9 @@ func (r *Raft) candidate(timeout int) int {
 		fmt.Println("===============Election started===================")
 		//reset the Votes else it will reflect the Votes received in last Term
 		r.resetVotes()
-		r.myCV.CurrentTerm += 1
-		//r.CurrentTerm =r.myCV.CurrentTerm + 1 //increment current Term
+		r.myCV.CurrentTerm += 1 //increment current Term
 		fmt.Println("I am candidate new term is:", r.myCV.CurrentTerm)
-		//r.VotedFor = r.Myconfig.Id              //Vote for self
-		r.myCV.VotedFor = r.Myconfig.Id
+		r.myCV.VotedFor = r.Myconfig.Id         //Vote for self
 		r.WriteCVToDisk()                       //write Current Term and VotedFor to disk
 		r.f_specific[r.Myconfig.Id].Vote = true //vote true
 		reqVoteObj := r.prepRequestVote()       //prepare request Vote obj
@@ -700,6 +698,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		leaderId := request.LeaderId
 		r.UpdateLeaderInfo(leaderId)      //update leader info
 		r.myCV.CurrentTerm = request.Term //update self Term
+		r.myCV.VotedFor = -1              //update votedfor whenever CT is changed
 		if state == follower {
 			HeartBeatTimer.Reset(waitTime_msecs) //reset the timer if this is HB or AE req from valid leader
 		}
@@ -750,18 +749,14 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 	}
 	appEntriesResponse.Term = r.myCV.CurrentTerm
 	appEntriesResponse.LastLogIndex = r.MyMetaData.LastLogIndex
-	fmt.Println("Sending AE_Resp to leader as:", appEntriesResponse, "to:", request.LeaderId, r.myId())
-	//fmt.Println("Conditions are:myLastIndex,reqLastIndex,myLastLogTerm,reqLastTerm,myCurrTerm,reqTerm", myLastIndex, request.LeaderLastLogIndex, myLastIndexTerm, request.LeaderLastLogTerm, r.myCV.CurrentTerm, request.Term)
 	r.send(request.LeaderId, appEntriesResponse)
 	if state == candidate && becomeFollower { //this is candidate call
-		fmt.Println(r.myId(), "becoming follower from candidate")
 		return follower
 	} else {
 		return -1
 	}
 }
 
-//r is follower who received the request
 //Services the received request for Vote, added param state for testing
 func (r *Raft) serviceRequestVote(request RequestVote, state int) {
 	//fmt.Println("In service RV method of ", r.Myconfig.Id)
@@ -772,17 +767,16 @@ func (r *Raft) serviceRequestVote(request RequestVote, state int) {
 		response.VoteGranted = true
 		r.myCV.VotedFor = candidateId
 		r.myCV.CurrentTerm = request.Term
-		r.WriteCVToDisk()
-
 	} else {
 		if request.Term > r.myCV.CurrentTerm {
 			r.myCV.CurrentTerm = request.Term
+			r.myCV.VotedFor = -1
 		}
 		response.VoteGranted = false
 	}
-	response.Term = r.myCV.CurrentTerm                                                                                      //to return self's Term too
-	fmt.Println("In serviceRV ", r.myId(), "state is:", state, "voting", response.VoteGranted, "for:", request.CandidateId) //"because Votefor is", r.VotedFor, "my and request Terms are:",r.myCV.CurrentTerm, request.Term)
-	r.send(candidateId, response)                                                                                           //send to sender using send(sender,response)
+	r.WriteCVToDisk()
+	response.Term = r.myCV.CurrentTerm
+	r.send(candidateId, response) //send to sender using send(sender,response)
 }
 
 func (r *Raft) WriteCVToDisk() {
@@ -813,6 +807,7 @@ func (r *Raft) WriteLogToDisk() {
 
 }
 func (r *Raft) isDeservingCandidate(request RequestVote) bool {
+	fmt.Println("In deservCand, conditions are:", request.Term, r.myCV.CurrentTerm, r.logAsGoodAsMine(request), request.Term, r.myCV.CurrentTerm, r.logAsGoodAsMine(request), r.myCV.VotedFor, r.myCV.VotedFor, request.CandidateId)
 	return ((request.Term > r.myCV.CurrentTerm && r.logAsGoodAsMine(request)) || (request.Term == r.myCV.CurrentTerm && r.logAsGoodAsMine(request) && (r.myCV.VotedFor == -1 || r.myCV.VotedFor == request.CandidateId)))
 }
 
@@ -824,7 +819,7 @@ func (r *Raft) logAsGoodAsMine(request RequestVote) bool {
 	} else {
 		myLastLogTerm = r.MyLog[myLastLogIndex].Term
 	}
-	//fmt.Println("In logAsGoodAsMine", r.myId(), "Granting Vote to:", request.CandidateId, "as", (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex)))
+	fmt.Println("In logAsGoodAsMine", r.myId(), "Granting Vote to:", request.CandidateId, "as", (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex)))
 	return (request.LastLogTerm > myLastLogTerm || (request.LastLogTerm == myLastLogTerm && request.LastLogIndex >= myLastLogIndex))
 }
 

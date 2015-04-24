@@ -5,7 +5,7 @@ package raft
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	//	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -34,10 +34,7 @@ func ServerStart(cluster *ClusterConfig, thisServerId int, ftimeout int, etimeou
 func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) (raftObj *Raft, err error) {
 	err = nil
 	var myObj, leaderObj ServerConfig
-	//var nextIndexMap = make(map[int]int)
 	var f_details = make(map[int]*followerDetails)
-
-	//var pathString_Log, pathString_CV string
 	//Intialising the ServerConfig struct for itself assuming id is already set in ServerConfig struct
 	servArr := (*cluster).Servers
 	for i, server := range servArr { //finding self details from cluster object and loading to myConfig of raft
@@ -50,14 +47,12 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 		}
 
 		if server.Id == thisServerId {
-			//read leader details into raftObj
+			//read default leader details into raftObj
 			myObj.Id = thisServerId
 			myObj.Hostname = servArr[i].Hostname
 			myObj.ClientPort = servArr[i].ClientPort
 			myObj.LogPort = servArr[i].LogPort
 		}
-		//nextIndexMap[i] = -1 //initialising nextIndexes for all in each server
-		//f_obj := followerDetails{false, nil}
 		f_obj := followerDetails{false, nil, -1}
 		f_details[i] = &f_obj
 	}
@@ -115,12 +110,11 @@ func ReadDiskFiles(pathString_Log string, pathString_CV string) (arrMyLog []LogV
 	return arrMyLog, myMD, myCV
 }
 
-//This reads only the last line,
-// each line size is 31bytes
+//This reads only the last line,each line size is 31bytes
 func ReadCVFile(pathString_CV string) (myCV TermVotedFor) {
 	fh, _ := os.Open(pathString_CV)
 	stat, _ := os.Stat(pathString_CV)
-	myCV = TermVotedFor{}
+	myCV = TermVotedFor{-1, -1}
 	a := make([]byte, 31)
 	_, err2 := fh.ReadAt(a, stat.Size()-31)
 	if err2 == io.EOF {
@@ -151,9 +145,6 @@ func ReadLogFile(pathString_Log string) (arrMyLog []LogVal, myMD LogMetaData) {
 			break
 		}
 		arrMyLog = append(arrMyLog, *in)
-	}
-	for i := 0; i < len(arrMyLog); i++ {
-		fmt.Println("val:", arrMyLog[i])
 	}
 	myMD = setMetaData(len(arrMyLog), arrMyLog)
 	return arrMyLog, myMD

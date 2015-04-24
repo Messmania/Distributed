@@ -165,11 +165,9 @@ func (r *Raft) handleClient(conn net.Conn) {
 			connMapMutex.Unlock()
 
 			if err == nil {
-				//fmt.Println("launched kvstore")
 				go r.kvStoreProcessing(&logEntry)
 
 			} else {
-				//fmt.Println("Wrong leader")
 				ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
 				errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
 				_, err1 := conn.Write([]byte(errRedirectStr))

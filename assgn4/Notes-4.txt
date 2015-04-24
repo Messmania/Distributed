@@ -333,15 +333,15 @@ if he is deserving, if not send false, but also update self term if req.term is 
 6. Modifying CV to a struct --DONE --working
 7. Modifying for read from disk now --done--working
 8. Removed marshalling and string conversion from writeLogToDisk--Done working
-
+9. When follower is updating its currentTerm from leader's, it must write CV to disk, with V=-1 --DONE- working
 
 Doubts:
 1. shouldnt commit index also be dumped to disk? what happens when a server resumes, it loads its log ,CV from disk, sets metadata, so 
-what bout CI field in metadata, asked sir!
+what bout CI field in metadata, asked sir!--No need, it will eventually be copied from leader
 2. Why should HB Timer be reset on getting RV? in case of non-deserving candidate, it shouldnt be. But if deserving , but not getting elected 
 as leader, then follower will timeout. is this right? yes sounds right.--removed and it works for now, test 1 more case as given in 5. above
 OR reset HB timer only when voting true for it.--Check this.
 
 ==execFromTest passed few times.
 In SingleServerbinary_Latest
-TIme is appearing like msecs, but it is second only, what is happening???
+TIme is appearing like msecs, but it is second only, what is happening???--Might be GOPATH issue, solved on restarting the system. (got hanged)

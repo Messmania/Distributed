@@ -73,7 +73,7 @@ func Test_KvStore(t *testing.T) {
 }
 */
 
-/*
+///*
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	fmt.Println("Testing single client append to leader")
@@ -193,9 +193,9 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
 }
 
-*/
+//*/
 
-///*
+/*
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
 func Test_LeaderChanges(t *testing.T) {
@@ -416,7 +416,7 @@ func TestMRMC(t *testing.T) {
 	fmt.Println("TestMRMC finished")
 }
 
-//*/
+*/
 
 //===FAILING===
 /*
