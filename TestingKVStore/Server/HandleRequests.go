@@ -1,47 +1,42 @@
-package clientCH
+package Server
+
 
 import (
 	"log"
 	"net"
-	"strconv"
 	"strings"
 )
 
-func Client(ch chan string, strEcho string, hostname string, port int) {
-	service := hostname + ":" + strconv.Itoa(port)
-	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
-	if err != nil {
-		checkErr("Error in Client(), ResolveTCPAddr", err)
-		return
-	}
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	if err != nil {
-		checkErr("Error in Client(),DailTCP", err)
-		ch <- "Error"
-		return
-	} else {
-		cmd := SeparateCmds(strEcho)
-		for i := 0; i < len(cmd); i++ {
-			_, err := conn.Write([]byte(cmd[i]))
-			if err != nil {
-				checkErr("In Client(),Error in conn.Write", err)
-				return
-			}
 
+func Client(ch chan string, strEcho string, c string) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9000")
+	checkError(err)
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	checkError(err)
+	cmd := SeparateCmds(strEcho)
+	for i := 0; i < len(cmd); i++ {
+		conn.Write([]byte(cmd[i]))
+		if !isNoReply(cmd[i]) {
 			var rep [512]byte
 			n, err1 := conn.Read(rep[0:])
-			if err1 != nil {
-				checkErr("In Client(),Error in Reading from conn", err1)
-				return
-			}
+			checkError(err1)
 			reply := string(rep[0:n])
 			ch <- reply
 		}
 	}
-	err1 := conn.Close()
-	if err1 != nil {
-		checkErr("Error in Client, closing conn", err1)
+	conn.Close()
+}
+
+
+func isNoReply(str string) bool {
+	line := strings.Split(str, "\r\n")
+	cl := strings.Fields(line[0])
+	op := strings.ToLower(cl[0])
+	l := len(cl)
+	if (op == "set" && l == 5 && cl[4] == "noreply") || (op == "cas" && l == 6 && cl[5] == "noreply") {
+		return true
 	}
+	return false
 }
 
 //For separating multiple cmds in a single string (MRMC case)
@@ -75,9 +70,8 @@ func SeparateCmds(str string) (cmd []string) {
 	return
 }
 
-func checkErr(msg string, err error) {
+func checkError(err error) {
 	if err != nil {
-		log.Println(msg, err)
-
+		log.Println("Error encountered:", err)
 	}
 }

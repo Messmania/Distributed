@@ -1,7 +1,7 @@
 package raft
 
 import (
-	//"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"strconv"
@@ -183,10 +183,6 @@ func getFields(key string, l int, op string) (sr string) {
 	if l == 2 {
 		globMutex.RLock()
 		d, exist := db[key]
-		//Testing
-
-		//		fmt.Println("db data is:", d)
-		//====
 		if exist != false {
 			d.recordMutex.Lock()
 			globMutex.RUnlock()
@@ -252,8 +248,7 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 
 func checkErr(msg string, err error) {
 	if err != nil {
-		//log.Println("Error encountered in KVStore.go:", err)
-		//log.Println(msg, err)
+		log.Println(msg, err)
 
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	//"time"
 	//"log"
+	"io"
 )
 
 func (r *Raft) connHandler(f int, e int) {
@@ -14,9 +15,6 @@ func (r *Raft) connHandler(f int, e int) {
 	go r.listenToServers()
 	go r.listenToClients()
 	go r.ServerSM(f, e)
-	fmt.Println("Launched listeners and SM")
-	//time.Sleep(time.Second * 15)
-
 }
 
 //==============+Assign4+===========
@@ -112,11 +110,13 @@ func (r *Raft) listenToClients() {
 }
 
 func (r *Raft) writeToEvCh(conn net.Conn) {
-	r.registerTypes()
+	//r.registerTypes()
 	for {
 		msg, err := r.DecodeInterface(conn)
 		if err != nil {
-			checkErr("Error in writeToEvCh(),DecodeInterface", err)
+			if err != io.EOF {
+				checkErr("Error in writeToEvCh(),DecodeInterface", err)
+			}
 			return
 		}
 		r.EventCh <- msg
@@ -134,17 +134,20 @@ func (r *Raft) registerTypes() {
 
 //For decoding the values
 func (r *Raft) DecodeInterface(conn net.Conn) (interface{}, error) {
+	r.registerTypes()
 	dec_net := gob.NewDecoder(conn)
 	var obj_dec interface{}
-	//	fmt.Println(r.myId(), "In decodeInterface")
 	err_dec := dec_net.Decode(&obj_dec)
 	if err_dec != nil {
-		checkErr("In DecodeInterface, err is:", err_dec)
-		return nil, err_dec
+		if err_dec == io.EOF {
+			checkErr("Client closed the connection,bye!", nil)
+			return nil, err_dec
+		} else {
+			checkErr("In DecodeInterface, err is:", err_dec)
+			return nil, err_dec
+		}
 
 	}
-	//fmt.Printf("After decoding from gob,type is %T \n", obj_dec)
-	//	fmt.Printf("In decode interface %v decoded value %T %v \n", r.myId(), obj_dec, obj_dec)
 	return obj_dec, nil
 }
 
@@ -153,32 +156,29 @@ func (r *Raft) handleClient(conn net.Conn) {
 	for {
 		var msg [512]byte
 		n, err := conn.Read(msg[0:])
-		fmt.Println("In handleClient,msg read is:", string(msg[0:]))
 		if err == nil && conn != nil {
-			fmt.Println("Error in conn read is nil,msg is:", string(msg[0:]))
+			fmt.Println("============In handleClient,msg read is:", string(msg[0:]))
 			cmd := msg
 			logEntry, err := r.Append(cmd[0:n])
-			//write the logEntry:conn to map
 			connMapMutex.Lock()
-			connLog[&logEntry] = conn
+			connLog[&logEntry] = conn //write the logEntry:conn to map
 			connMapMutex.Unlock()
 
 			if err == nil {
-				fmt.Println("launched kvstore")
+				//fmt.Println("launched kvstore")
 				go r.kvStoreProcessing(&logEntry)
 
 			} else {
-				//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
+				//fmt.Println("Wrong leader")
 				ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
 				errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
 				_, err1 := conn.Write([]byte(errRedirectStr))
 				if err1 != nil {
 					checkErr("Error in writing redirect string to conn", err1)
 				}
-				//fmt.Println(r.myId(), "In handleclient, wrote redirection to conn")
 			}
 		} else {
-			fmt.Println("In handleclient, return from method", r.myId())
+			//fmt.Println("In handleclient, return from method", r.myId())
 			return
 		}
 	}

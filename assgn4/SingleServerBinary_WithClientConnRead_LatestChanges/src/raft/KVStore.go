@@ -2,7 +2,7 @@ package raft
 
 import (
 	"fmt"
-	//	"log"
+	"log"
 	//	"math"
 	"math/rand"
 	"net"
@@ -40,7 +40,6 @@ type Data struct {
 //func kvStoreProcessing(commitCh chan *LogEntry) {
 func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	fmt.Println("In kvprocessing", *logEntry)
-	//logEntry := <-commitCh
 	connMapMutex.RLock()
 	conn := connLog[logEntry]
 	connMapMutex.RUnlock()
@@ -48,27 +47,21 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	request := string((*logEntry).Data())
 	fmt.Println("In kv,request rcvd is:", request)
 	str := strings.Split(request, "\r\n")
-	fmt.Println("str after spliting is:", str, "len of fst arg is:", len(str[0]))
 	//Server response and value field from command
 	sr := ""
 	key := ""
 	op := ""
 	l := 0
 	value := ""
-	//cmd contains individual fields of command
-	cmd := strings.Fields(str[0])
-	fmt.Println("cmd is:", cmd)
+	cmd := strings.Fields(str[0]) //cmd contains individual fields of command
 	l = len(cmd)
 	if l > 1 {
 		op = strings.ToLower(cmd[0])
 		value = str[1]
 		key = cmd[1]
-		//fmt.Println("key extracted is:", key)
 	} else {
 		op = ""
 	}
-
-	fmt.Println("Before case,key is:", key)
 	switch op {
 	case "set":
 		if l == 4 {
@@ -133,7 +126,6 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 }
 
 func setFields(expStr string, numb int64, value string, key string, l int, op string) (sr string) {
-	fmt.Println("in setfields, key is:", key)
 	//Timer handling
 	var oldTimer *time.Timer
 	globMutex.RLock()
@@ -181,14 +173,9 @@ func setFields(expStr string, numb int64, value string, key string, l int, op st
 }
 
 func getFields(key string, l int, op string) (sr string) {
-	fmt.Println("in get fields,Key is:", key)
 	if l == 2 {
 		globMutex.RLock()
 		d, exist := db[key]
-		//Testing
-
-		fmt.Println("db data is:", d)
-		//====
 		if exist != false {
 			d.recordMutex.Lock()
 			globMutex.RUnlock()
@@ -254,9 +241,7 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 
 func checkErr(msg string, err error) {
 	if err != nil {
-		//log.Println("Error encountered in KVStore.go:", err)
-		//log.Println(msg, err)
-
+		log.Println(msg, err)
 	}
 }
 

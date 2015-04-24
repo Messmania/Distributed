@@ -2,7 +2,7 @@ package raft
 
 import (
 	"clientCH"
-	//"fmt"
+	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -32,7 +32,7 @@ func Test_StartServers(t *testing.T) {
 
 	id = []int{0, 1, 2, 3, 4}
 	w = []int{w0, w1, w2, w3, w4}
-	//	fmt.Println("Exec-ing the servers")
+	fmt.Println("Exec-ing the servers:waits are:", w)
 	for i := 0; i < 5; i++ {
 		process[i] = exec.Command("serverStarter", filename, strconv.Itoa(id[i]), strconv.Itoa(w[i]), strconv.Itoa(50))
 		err := process[i].Start()
@@ -68,7 +68,7 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	//fmt.Println("response", response, "Rline is:", RLine[1], RLine[0])
 	R1 := strings.Fields(RLine[0])
 	if R1[0] != expected {
-		t.Error("Mismatch!", R1[0], expected)
+		t.Error("Mismatch! Expected and Received values are:", expected, R1[0])
 	}
 
 	//	fmt.Println("Test SingleCA_Leader finished")
@@ -78,7 +78,6 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 
 //PASSED
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
-	//	fmt.Println("Testing MCA to leader")
 	const n int = 4
 	const nResponses int = 5
 
@@ -105,7 +104,7 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	for j := 0; j < n; j++ {
 		//fmt.Println("Before reading", j)
 		R := <-chann[j]
-		//fmt.Println("After reading", j)
+		fmt.Println("After reading", j)
 		Result := ""
 		matched := 0
 		RLine := strings.Split(R, "\r\n")
@@ -129,9 +128,6 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 			t.Error("Received values are:\r\n", Result)
 		}
 	}
-
-	//	fmt.Println("Test MCA_leader completed")
-
 	w := msecs * time.Duration(1)
 	time.Sleep(w)
 
@@ -171,17 +167,9 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 }
 
 func Test_ServerCrash_(t *testing.T) {
-	//fmt.Println("Process id to be killed is:", process[1].Process.Pid)
-	time.Sleep(time.Second * 5)
-	//	fmt.Println("Crashing s1 now")
+	fmt.Println("Process id being killed is:", process[1].Process.Pid)
 	process[1].Process.Kill()
-	time.Sleep(time.Second * 5) //time to elect a new leader
-
-	//For testing--WORKS, it is shwing up in netstat, but don't if able to connect to others
-	/*
-		process[1] = exec.Command("serverStarter", filename, strconv.Itoa(id[1]), strconv.Itoa(w[1]), strconv.Itoa(50))
-		process[1].Start()
-	*/
+	time.Sleep(time.Second * 5) //time to elect a new leader and close the ports of S1 completely
 }
 
 // =============PASSED================
@@ -195,7 +183,7 @@ func Test_LeaderChanges(t *testing.T) {
 	myChan := make(chan string)
 	go clientCH.Client(myChan, set1, hostname, port)
 	response := <-myChan
-	//	fmt.Println("Response is:", response)
+	fmt.Println("Response is:", response)
 	RLine := strings.Split(response, "\r\n")
 	if RLine[1] != "" && RLine[0] != expected {
 		t.Error("Mismatch!", response, expected)
@@ -257,6 +245,8 @@ func Test_NewLeaderResponses(t *testing.T) {
 
 	process[1] = exec.Command("serverStarter", filename, strconv.Itoa(id[1]), strconv.Itoa(w[1]), strconv.Itoa(50))
 	process[1].Start()
+	process[1].Stderr = os.Stderr
+	process[1].Stdout = os.Stdout
 	//	fmt.Println("===========S1 resumed==========waiting for 10sec")
 	w := msecs * time.Duration(3)
 	time.Sleep(w)
@@ -321,79 +311,6 @@ func TestErrors(t *testing.T) {
 	//	fmt.Println("Test Errors finished")
 
 }
-
-//===FAILING===
-/*
-//For testing expiry and remaining exp in getm
-func TestCheckAndExpire(t *testing.T) {
-	fmt.Println("Test Check and expire started")
-	port = 9002
-	const n int = 4
-	chann := make([]chan string, n)
-
-	//for initialing the array
-	for k := 0; k < n; k++ {
-		chann[k] = make(chan string)
-	}
-
-	//Commands
-	set1 := "set abc 3 8\r\nabcdefjg\r\n"
-	set2 := "set abc 6 7\r\nmonikas\r\n"
-	getm1 := "getm abc\r\n"
-	//cmd := []string{set1, getm1, set2, getm1}
-	//Expected values
-	Eset1 := "OK"
-	Egetm1 := "VALUE 2 8\r\nabcdefjg\r\n"
-	Egetm2 := "VALUE 5 7\r\nmonikas\r\n"
-	E := []string{Eset1, Egetm1, Eset1, Egetm2}
-
-	var R [n]string
-	go clientCH.Client(chann[0], set1, hostname, port)
-	time.Sleep(time.Second * 1)
-
-	//	Rset1 := strings.Fields(<-chann[0])
-	//	R[0] = Rset1[0]
-
-	go clientCH.Client(chann[1], getm1, hostname, port)
-	time.Sleep(time.Second * 1)
-
-	go clientCH.Client(chann[2], set2, hostname, port)
-	time.Sleep(time.Second * 1)
-	go clientCH.Client(chann[3], getm1, hostname, port)
-
-	//Excluding hard coded version number
-	fmt.Println("Listening for response:", E[0])
-	Rset1 := strings.Fields(<-chann[0])
-	R[0] = Rset1[0]
-	fmt.Println("Got:", R[0])
-
-	fmt.Println("Listening for response:", E[1])
-	RLine := strings.Split(<-chann[1], "\r\n")
-	fmt.Println("chann 1 response is", RLine)
-	Rgetm1 := strings.Fields(RLine[0])
-	R[1] = Rgetm1[0] + " " + Rgetm1[2] + " " + Rgetm1[3] + "\r\n" + RLine[1] + "\r\n"
-	fmt.Println("Got:", R[1])
-
-	fmt.Println("Listening for response:", E[2])
-	Rset2 := strings.Fields(<-chann[2])
-	R[2] = Rset2[0]
-	fmt.Println("Got:", R[2])
-	 ==Failing! Check kvstore
-	fmt.Println("Listening for response:", E[3])
-	RLine1 := strings.Split(<-chann[3], "\r\n")
-	Rgetm2 := strings.Fields(RLine1[0])
-	R[3] = Rgetm2[0] + " " + Rgetm2[2] + " " + Rgetm2[3] + "\r\n" + RLine1[1] + "\r\n"
-	fmt.Println("Got:", RLine1)
-
-
-	for j := 0; j < n; j++ {
-		if R[j] != E[j] {
-			t.Error("Expected and Received values are:\r\n", E[j], R[j])
-		}
-	}
-	fmt.Println("Test Check and Exp finished")
-}
-*/
 
 func TestMRSC(t *testing.T) {
 	//	fmt.Println("TestMRSC started")
@@ -475,4 +392,84 @@ func TestMRMC(t *testing.T) {
 		}
 	}
 	//	fmt.Println("TestMRMC finished")
+}
+
+//===FAILING===
+/*
+//For testing expiry and remaining exp in getm
+func TestCheckAndExpire(t *testing.T) {
+	fmt.Println("Test Check and expire started")
+	port = 9002
+	const n int = 4
+	chann := make([]chan string, n)
+
+	//for initialing the array
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan string)
+	}
+
+	//Commands
+	set1 := "set abc 3 8\r\nabcdefjg\r\n"
+	set2 := "set abc 6 7\r\nmonikas\r\n"
+	getm1 := "getm abc\r\n"
+	//cmd := []string{set1, getm1, set2, getm1}
+	//Expected values
+	Eset1 := "OK"
+	Egetm1 := "VALUE 2 8\r\nabcdefjg\r\n"
+	Egetm2 := "VALUE 5 7\r\nmonikas\r\n"
+	E := []string{Eset1, Egetm1, Eset1, Egetm2}
+
+	var R [n]string
+	go clientCH.Client(chann[0], set1, hostname, port)
+	time.Sleep(time.Second * 1)
+
+	//	Rset1 := strings.Fields(<-chann[0])
+	//	R[0] = Rset1[0]
+
+	go clientCH.Client(chann[1], getm1, hostname, port)
+	time.Sleep(time.Second * 1)
+
+	go clientCH.Client(chann[2], set2, hostname, port)
+	time.Sleep(time.Second * 1)
+	go clientCH.Client(chann[3], getm1, hostname, port)
+
+	//Excluding hard coded version number
+	fmt.Println("Listening for response:", E[0])
+	Rset1 := strings.Fields(<-chann[0])
+	R[0] = Rset1[0]
+	fmt.Println("Got:", R[0])
+
+	fmt.Println("Listening for response:", E[1])
+	RLine := strings.Split(<-chann[1], "\r\n")
+	fmt.Println("chann 1 response is", RLine)
+	Rgetm1 := strings.Fields(RLine[0])
+	R[1] = Rgetm1[0] + " " + Rgetm1[2] + " " + Rgetm1[3] + "\r\n" + RLine[1] + "\r\n"
+	fmt.Println("Got:", R[1])
+
+	fmt.Println("Listening for response:", E[2])
+	Rset2 := strings.Fields(<-chann[2])
+	R[2] = Rset2[0]
+	fmt.Println("Got:", R[2])
+	 ==Failing! Check kvstore
+	fmt.Println("Listening for response:", E[3])
+	RLine1 := strings.Split(<-chann[3], "\r\n")
+	Rgetm2 := strings.Fields(RLine1[0])
+	R[3] = Rgetm2[0] + " " + Rgetm2[2] + " " + Rgetm2[3] + "\r\n" + RLine1[1] + "\r\n"
+	fmt.Println("Got:", RLine1)
+
+
+	for j := 0; j < n; j++ {
+		if R[j] != E[j] {
+			t.Error("Expected and Received values are:\r\n", E[j], R[j])
+		}
+	}
+	fmt.Println("Test Check and Exp finished")
+}
+*/
+
+//Stop the servers once testing is done
+func Test_KillAll(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		process[i].Process.Kill()
+	}
 }

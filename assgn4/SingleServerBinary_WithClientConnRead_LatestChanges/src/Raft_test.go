@@ -29,6 +29,51 @@ func Test_StartServers(t *testing.T) {
 
 }
 
+//PASSED, there was no problem :\ key is getting extracted properly in get and getm
+/*
+//Testing kvstore
+func Test_KvStore(t *testing.T) {
+	fmt.Println("Testing kvstore")
+	const n int = 3
+	const nResponses int = 5
+
+	set1 := "set bcd 30 5\r\nefghi\r\n"
+	getm1 := "get bcd\r\n"
+	//set2 := "set abc 2 5\r\nmonik\r\n"
+	getm2 := "getm abc\r\n"
+	//del1 := "delete bcd\r\n"
+
+	//cmd := []string{set1, getm1, set2, getm2, del1}
+	cmd := []string{set1, getm1, getm2}
+	//cd := []string{"set2", "getm1", "getm2", "del1"}
+
+	E := []string{"OK", "VALUE 5\r\nabcdefjg", "OK", "VALUE 5\r\nefghi"}
+
+	chann := make([]chan string, n)
+
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan string)
+	}
+	for i := 0; i < n; i++ {
+		go clientCH.Client(chann[i], cmd[i], hostname, port)
+		time.Sleep(time.Millisecond * 5)
+	}
+
+	for j := 0; j < n; j++ {
+		fmt.Println("Before reading", j)
+		R := <-chann[j]
+		fmt.Println("Expected is for :", j, E[j], "Response is:", R)
+	}
+
+	fmt.Println("Test kvstore completed")
+
+	w := msecs * time.Duration(1)
+	time.Sleep(w)
+
+}
+*/
+
+/*
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	fmt.Println("Testing single client append to leader")
@@ -55,7 +100,6 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	time.Sleep(w)
 }
 
-//PASSED
 func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	fmt.Println("Testing MCA to leader")
 	const n int = 4
@@ -110,7 +154,6 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	}
 
 	fmt.Println("Test MCA_leader completed")
-
 	w := msecs * time.Duration(1)
 	time.Sleep(w)
 
@@ -150,22 +193,9 @@ func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
 }
 
-/*
-func Test_ServerCrash_(t *testing.T) {
-	fmt.Println("Process id to be killed is:", process[1].Process.Pid)
-	time.Sleep(time.Second * 5)
-	fmt.Println("Crashing s1 now")
-	process[1].Process.Kill()
-	time.Sleep(time.Second * 5) //time to elect a new leader
-
-	//For testing--WORKS, it is showing up in netstat, but don't know if able to connect to others
-
-//		process[1] = exec.Command("serverStarter", filename, strconv.Itoa(id[1]), strconv.Itoa(w[1]), strconv.Itoa(50))
-//		process[1].Start()
-
-}
 */
 
+///*
 //S1 is crashed so S2 becomes leader as its wait is lesser than others and it is deserving
 //Since S2 is now leader, it will append the entry and send back the response OK <version>
 func Test_LeaderChanges(t *testing.T) {
@@ -299,79 +329,7 @@ func TestErrors(t *testing.T) {
 
 }
 
-//===FAILING===
-/*
-//For testing expiry and remaining exp in getm
-func TestCheckAndExpire(t *testing.T) {
-	fmt.Println("Test Check and expire started")
-	port = 9002
-	const n int = 4
-	chann := make([]chan string, n)
-
-	//for initialing the array
-	for k := 0; k < n; k++ {
-		chann[k] = make(chan string)
-	}
-
-	//Commands
-	set1 := "set abc 3 8\r\nabcdefjg\r\n"
-	set2 := "set abc 6 7\r\nmonikas\r\n"
-	getm1 := "getm abc\r\n"
-	//cmd := []string{set1, getm1, set2, getm1}
-	//Expected values
-	Eset1 := "OK"
-	Egetm1 := "VALUE 2 8\r\nabcdefjg\r\n"
-	Egetm2 := "VALUE 5 7\r\nmonikas\r\n"
-	E := []string{Eset1, Egetm1, Eset1, Egetm2}
-
-	var R [n]string
-	go clientCH.Client(chann[0], set1, hostname, port)
-	time.Sleep(time.Second * 1)
-
-	//	Rset1 := strings.Fields(<-chann[0])
-	//	R[0] = Rset1[0]
-
-	go clientCH.Client(chann[1], getm1, hostname, port)
-	time.Sleep(time.Second * 1)
-
-	go clientCH.Client(chann[2], set2, hostname, port)
-	time.Sleep(time.Second * 1)
-	go clientCH.Client(chann[3], getm1, hostname, port)
-
-	//Excluding hard coded version number
-	fmt.Println("Listening for response:", E[0])
-	Rset1 := strings.Fields(<-chann[0])
-	R[0] = Rset1[0]
-	fmt.Println("Got:", R[0])
-
-	fmt.Println("Listening for response:", E[1])
-	RLine := strings.Split(<-chann[1], "\r\n")
-	fmt.Println("chann 1 response is", RLine)
-	Rgetm1 := strings.Fields(RLine[0])
-	R[1] = Rgetm1[0] + " " + Rgetm1[2] + " " + Rgetm1[3] + "\r\n" + RLine[1] + "\r\n"
-	fmt.Println("Got:", R[1])
-
-	fmt.Println("Listening for response:", E[2])
-	Rset2 := strings.Fields(<-chann[2])
-	R[2] = Rset2[0]
-	fmt.Println("Got:", R[2])
-	 ==Failing! Check kvstore
-	fmt.Println("Listening for response:", E[3])
-	RLine1 := strings.Split(<-chann[3], "\r\n")
-	Rgetm2 := strings.Fields(RLine1[0])
-	R[3] = Rgetm2[0] + " " + Rgetm2[2] + " " + Rgetm2[3] + "\r\n" + RLine1[1] + "\r\n"
-	fmt.Println("Got:", RLine1)
-
-
-	for j := 0; j < n; j++ {
-		if R[j] != E[j] {
-			t.Error("Expected and Received values are:\r\n", E[j], R[j])
-		}
-	}
-	fmt.Println("Test Check and Exp finished")
-}
-*/
-
+///*
 func TestMRSC(t *testing.T) {
 	fmt.Println("TestMRSC started")
 	port = 9002
@@ -457,3 +415,76 @@ func TestMRMC(t *testing.T) {
 	}
 	fmt.Println("TestMRMC finished")
 }
+
+//*/
+
+//===FAILING===
+/*
+//For testing expiry and remaining exp in getm
+func TestCheckAndExpire(t *testing.T) {
+	fmt.Println("Test Check and expire started")
+	port = 9002
+	const n int = 4
+	chann := make([]chan string, n)
+
+	//for initialing the array
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan string)
+	}
+
+	//Commands
+	set1 := "set abc 3 8\r\nabcdefjg\r\n"
+	set2 := "set abc 6 7\r\nmonikas\r\n"
+	getm1 := "getm abc\r\n"
+	//Expected values
+	Eset1 := "OK"
+	Egetm1 := "VALUE 2 8\r\nabcdefjg\r\n"
+	Egetm2 := "VALUE 5 7\r\nmonikas\r\n"
+	E := []string{Eset1, Egetm1, Eset1, Egetm2}
+
+	var R [n]string
+	go clientCH.Client(chann[0], set1, hostname, port)
+	time.Sleep(time.Second * 1)
+
+	//	Rset1 := strings.Fields(<-chann[0])
+	//	R[0] = Rset1[0]
+
+	go clientCH.Client(chann[1], getm1, hostname, port)
+	time.Sleep(time.Second * 1)
+
+	go clientCH.Client(chann[2], set2, hostname, port)
+	time.Sleep(time.Second * 1)
+	go clientCH.Client(chann[3], getm1, hostname, port)
+
+	//Excluding hard coded version number
+	fmt.Println("Listening for response:", E[0])
+	Rset1 := strings.Fields(<-chann[0])
+	fmt.Println("Got:", Rset1)
+	R[0] = Rset1[0]
+
+	fmt.Println("Listening for response:", E[1])
+	RLine := strings.Split(<-chann[1], "\r\n")
+	fmt.Println("Got:", RLine)
+	Rgetm1 := strings.Fields(RLine[0])
+	R[1] = Rgetm1[0] + " " + Rgetm1[2] + " " + Rgetm1[3] + "\r\n" + RLine[1] + "\r\n"
+
+	fmt.Println("Listening for response:", E[2])
+	Rset2 := strings.Fields(<-chann[2])
+	fmt.Println("Got:", Rset2)
+	R[2] = Rset2[0]
+
+	// ==Failing! Check kvstore
+	fmt.Println("Listening for response:", E[3])
+	RLine1 := strings.Split(<-chann[3], "\r\n")
+	Rgetm2 := strings.Fields(RLine1[0])
+	R[3] = Rgetm2[0] + " " + Rgetm2[2] + " " + Rgetm2[3] + "\r\n" + RLine1[1] + "\r\n"
+	fmt.Println("Got:", RLine1)
+
+	for j := 0; j < n; j++ {
+		if R[j] != E[j] {
+			t.Error("Expected and Received values are:\r\n", E[j], R[j])
+		}
+	}
+	fmt.Println("Test Check and Exp finished")
+}
+*/

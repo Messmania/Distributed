@@ -291,7 +291,7 @@ CommitIndex must be of some use here!
 13. When more than 1 candidate, then nobody is winning, all get stuck in candidate state!
 	
 ==Changes made==
-1. Removed decode encode handleClient method (was commented)
+1. Removed decode encode handleClient method (was commented)--Removed
 2. Fixed bug 7,9,10
 3. changed break -> return in handleClient else block
 
@@ -299,12 +299,49 @@ CommitIndex must be of some use here!
 Status:
 1. ALl tests pass except MRMC after leader changes --PASSED NOW
 2. Use state var in serviceRV, (for now it is not used--too tired to test agn!)--No need, it was for testing, but can be used
-
+3. execFromTest and BinaryLatest has latest working code. CheckNExpire not passing=============, rest passed 2wice using exec
+use binary launching in terminals to debug.
+SIGTERM- commitEntryFrom prev term test is remaining
 
 COnfusions:
-1. In serviceAE_Response, if lastLogIndex is -1 whether to call logrepair or just set NI to 0
+1. In serviceAE_Response, if lastLogIndex is -1 whether to call logrepair or just set NI to 0--setting 0 for now
 2. in serviceAE_Req, if entries are nil, what else to check?
 	can there be a case, when leader is nil, but follower has entries=---NO! Only one with lengthier log becms leader.
 	so say S1 had good long log and is leader. S2 S3 are consistent followers.
 	now if S0 starts, it can never be leader. till any of the one above is up.
 3. Case mailed to sir.
+
+STatus: 23/april
+-No changes made to kvstore or any file, kvstore is working fine for now.
+
+TO DO:
+1. read from disk , when folder exists!--DONE
+2. Check n expire --passes most of the times, when stuck , then all go into candidate mode..! Test this
+3. commit entry from prev term
+4. CRITICAL case 11. as given above and also 12 13
+5. Check 2 (in 24 April) prob, print what is leader sending.
+
+24 APRIL:
+1. Added code for case (mailed to sir)to myRaft, serviceRequestVote: ideally when a candidate with short log comes up,sends RV to leader, leader shud check 
+if he is deserving, if not send false, but also update self term if req.term is greater: Changed in serviceRV--DONE
+2. Shifted call to register types from writeToEvChan to DecodeInterface--cz sometimes gob decoding error comes due to which follower times out
+3. Shifted nextIndex to f_specific, removed nextIndexMap
+4. Changed the err msg in DecodeInterface (ServerConnHandler) when it is EOF and in writeToEvChan
+5. Removed HB timer reset from follower RV case--works fine for now, but test this case
+	- deserving candidate say s1 comes when election is going on already by say S2. So s1 shud win and send HB to all, then only followers timer
+	will be reset , else s2 will keep timing out.
+6. Modifying CV to a struct --DONE --working
+7. Modifying for read from disk now --done--working
+8. Removed marshalling and string conversion from writeLogToDisk--Done working
+
+
+Doubts:
+1. shouldnt commit index also be dumped to disk? what happens when a server resumes, it loads its log ,CV from disk, sets metadata, so 
+what bout CI field in metadata, asked sir!
+2. Why should HB Timer be reset on getting RV? in case of non-deserving candidate, it shouldnt be. But if deserving , but not getting elected 
+as leader, then follower will timeout. is this right? yes sounds right.--removed and it works for now, test 1 more case as given in 5. above
+OR reset HB timer only when voting true for it.--Check this.
+
+==execFromTest passed few times.
+In SingleServerbinary_Latest
+TIme is appearing like msecs, but it is second only, what is happening???
